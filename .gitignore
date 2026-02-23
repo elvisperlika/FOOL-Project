@@ -1,3 +1,6 @@
+### Copilot ###
+.idea/copilot.data.migration.ask2agent.xml
+
 ### IntelliJ IDEA ###
 out/
 !**/src/main/**/out/
