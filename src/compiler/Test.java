@@ -13,8 +13,9 @@ import org.antlr.v4.runtime.tree.ParseTree;
 public class Test {
   public static void main(String[] args) throws Exception {
 
-    String fileName = "prova.fool";
-    
+    String directory = "esempi/";
+    String fileName = directory + "quicksort.fool";
+
     CharStream chars = CharStreams.fromFileName(fileName);
     FOOLLexer lexer = new FOOLLexer(chars);
     CommonTokenStream tokens = new CommonTokenStream(lexer);

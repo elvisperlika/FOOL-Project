@@ -32,12 +32,12 @@ dec : VAR ID COLON type ASS exp SEMIC #vardec
           SEMIC #fundec
     ;
 
-exp     : exp (TIMES | DIV) exp #timesDiv
-        | exp (PLUS | MINUS) exp #plusMinus
-        | exp (EQ | GE | LE) exp #comp
-        | exp (AND | OR) exp #andOr
+exp   : exp (TIMES | DIV) exp #timesDiv
+      | exp (PLUS | MINUS) exp #plusMinus
+      | exp (EQ | GE | LE) exp #comp
+      | exp (AND | OR) exp #andOr
 	    | NOT exp #not
-        | LPAR exp RPAR #pars
+      | LPAR exp RPAR #pars
     	| MINUS? NUM #integer
 	    | TRUE #true
 	    | FALSE #false
@@ -45,14 +45,14 @@ exp     : exp (TIMES | DIV) exp #timesDiv
 	    | NEW ID LPAR (exp (COMMA exp)* )? RPAR #new
 	    | IF exp THEN CLPAR exp CRPAR ELSE CLPAR exp CRPAR #if
 	    | PRINT LPAR exp RPAR #print
-        | ID #id
+      | ID #id
 	    | ID LPAR (exp (COMMA exp)* )? RPAR #call
 	    | ID DOT ID LPAR (exp (COMMA exp)* )? RPAR #dotCall
-        ;
+      ;
 
 
-type    : INT #intType
-        | BOOL #boolType
+type  : INT #intType
+      | BOOL #boolType
  	    | ID #idType
  	    ;
 
@@ -63,14 +63,14 @@ type    : INT #intType
 PLUS  	: '+' ;
 MINUS   : '-' ;
 TIMES   : '*' ;
-DIV 	: '/' ;
-LPAR	: '(' ;
-RPAR	: ')' ;
-CLPAR	: '{' ;
-CRPAR	: '}' ;
+DIV 	  : '/' ;
+LPAR	  : '(' ;
+RPAR	  : ')' ;
+CLPAR	  : '{' ;
+CRPAR	  : '}' ;
 SEMIC 	: ';' ;
 COLON   : ':' ;
-COMMA	: ',' ;
+COMMA	  : ',' ;
 DOT	    : '.' ;
 OR	    : '||';
 AND	    : '&&';
@@ -79,30 +79,30 @@ GE	    : '>=' ;
 LE	    : '<=' ;
 EQ	    : '==' ;
 ASS	    : '=' ;
-TRUE	: 'true' ;
-FALSE	: 'false' ;
+TRUE	  : 'true' ;
+FALSE	  : 'false' ;
 IF	    : 'if' ;
-THEN	: 'then';
-ELSE	: 'else' ;
-PRINT	: 'print' ;
+THEN	  : 'then';
+ELSE	  : 'else' ;
+PRINT	  : 'print' ;
 LET     : 'let' ;
 IN      : 'in' ;
 VAR     : 'var' ;
 FUN	    : 'fun' ;
-CLASS	: 'class' ;
+CLASS	  : 'class' ;
 EXTENDS : 'extends' ;
-NEW 	: 'new' ;
+NEW 	  : 'new' ;
 NULL    : 'null' ;
 INT	    : 'int' ;
-BOOL	: 'bool' ;
+BOOL	  : 'bool' ;
 NUM     : '0' | ('1'..'9')('0'..'9')* ;
 
-ID  	: ('a'..'z'|'A'..'Z')('a'..'z' | 'A'..'Z' | '0'..'9')* ;
+ID  	  : ('a'..'z'|'A'..'Z')('a'..'z' | 'A'..'Z' | '0'..'9')* ;
 
 
-WHITESP  : ( '\t' | ' ' | '\r' | '\n' )+    -> channel(HIDDEN) ;
+WHITESP : ( '\t' | ' ' | '\r' | '\n' )+    -> channel(HIDDEN) ;
 
 COMMENT : '/*' .*? '*/' -> channel(HIDDEN) ;
 
-ERR   	 : . { System.out.println("Invalid char: "+ getText() +" at line "+getLine()); lexicalErrors++; } -> channel(HIDDEN);
+ERR   	: . { System.out.println("Invalid char: "+ getText() +" at line "+getLine()); lexicalErrors++; } -> channel(HIDDEN);
 

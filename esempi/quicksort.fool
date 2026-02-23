@@ -1,0 +1,8 @@
+let
+  var x: int = 10;
+  var y: int = 5;
+in
+  if x >= y then
+    print x + y
+  else
+    print x - y

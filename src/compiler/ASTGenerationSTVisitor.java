@@ -64,26 +64,41 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
   }
 
   @Override
-  public Node visitTimes(TimesContext c) {
+  public Node visitPlusMinus(PlusMinusContext c) {
     if (print) printVarAndProdName(c);
-    Node n = new TimesNode(visit(c.exp(0)), visit(c.exp(1)));
-    n.setLine(c.TIMES().getSymbol().getLine());    // setLine added
+    Node n = null;
+    if (c.PLUS() != null) n = new PlusNode(visit(c.exp(0)), visit(c.exp(1)));
+    else if (c.MINUS() != null) n = new MinusNode(visit(c.exp(0)), visit(c.exp(1)));
+    n.setLine(c.PLUS() != null ? c.PLUS().getSymbol().getLine() :
+                      c.MINUS().getSymbol().getLine());
+    n.setLine(c.PLUS() != null ? c.PLUS().getSymbol().getLine() :
+                      c.MINUS().getSymbol().getLine());
     return n;
   }
 
   @Override
-  public Node visitPlus(PlusContext c) {
+  public Node visitTimesDiv(TimesDivContext c) {
     if (print) printVarAndProdName(c);
-    Node n = new PlusNode(visit(c.exp(0)), visit(c.exp(1)));
-    n.setLine(c.PLUS().getSymbol().getLine());
+    Node n = null;
+    if (c.TIMES() != null) n = new TimesNode(visit(c.exp(0)), visit(c.exp(1)));
+    else if (c.DIV() != null) n = new DivNode(visit(c.exp(0)), visit(c.exp(1)));
+    assert n != null;
+    n.setLine(c.TIMES() != null ? c.TIMES().getSymbol().getLine() :
+                      c.DIV().getSymbol().getLine());
     return n;
   }
 
   @Override
-  public Node visitEq(EqContext c) {
+  public Node visitComp(CompContext c) {
     if (print) printVarAndProdName(c);
-    Node n = new EqualNode(visit(c.exp(0)), visit(c.exp(1)));
-    n.setLine(c.EQ().getSymbol().getLine());
+    Node n = null;
+    if (c.EQ() != null) n = new EqualNode(visit(c.exp(0)), visit(c.exp(1)));
+    else if (c.GE() != null) n = new GreaterEqualNode(visit(c.exp(0)), visit(c.exp(1)));
+    else if (c.LE() != null) n = new LessEqualNode(visit(c.exp(0)), visit(c.exp(1)));
+    assert n != null;
+    n.setLine(c.EQ() != null ? c.EQ().getSymbol().getLine() :
+                      c.GE() != null ? c.GE().getSymbol().getLine() :
+                              c.LE().getSymbol().getLine());
     return n;
   }
 
