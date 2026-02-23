@@ -8,9 +8,9 @@ import static compiler.lib.FOOLlib.extractNodeName;
 
 public class BaseASTVisitor<S, E extends Exception> {
 
+  private boolean incomplExc; // enables throwing IncomplException
   protected boolean print;    // enables printing
   protected String indent;
-  private boolean incomplExc; // enables throwing IncomplException
 
   protected BaseASTVisitor() { }
 
@@ -85,4 +85,41 @@ public class BaseASTVisitor<S, E extends Exception> {
   public S visitNode(BoolTypeNode n) throws E { throw new UnimplException(); }
 
   public S visitNode(IntTypeNode n) throws E { throw new UnimplException(); }
+
+  // OPERATOR EXTENSION
+
+  //  public S visitNode(GreaterEqualNode n) throws E { throw new UnimplException(); }
+  //
+  //  public S visitNode(LessEqualNode n) throws E { throw new UnimplException(); }
+  //
+  //  public S visitNode(NotNode n) throws E { throw new UnimplException(); }
+  //
+  //  public S visitNode(MinusNode n) throws E { throw new UnimplException(); }
+  //
+  //  public S visitNode(OrNode n) throws E { throw new UnimplException(); }
+  //
+  //  public S visitNode(DivNode n) throws E { throw new UnimplException(); }
+  //
+  //  public S visitNode(AndNode n) throws E { throw new UnimplException(); }
+  //
+  //  // OBJECT-ORIENTED EXTENSION
+  //
+  //  public S visitNode(ClassNode n) throws E { throw new UnimplException(); }
+  //
+  //  public S visitNode(FieldNode node) throws E { throw new UnimplException(); }
+  //
+  //  public S visitNode(MethodNode n) throws E { throw new UnimplException(); }
+  //
+  //  public S visitNode(ClassCallNode node) throws E { throw new UnimplException(); }
+  //
+  //  public S visitNode(NewNode n) throws E { throw new UnimplException(); }
+  //
+  //  public S visitNode(EmptyNode n) throws E { throw new UnimplException(); }
+  //
+  //  public S visitNode(ClassTypeNode n) throws E { throw new UnimplException(); }
+  //
+  //  public S visitNode(RefTypeNode n) throws E { throw new UnimplException(); }
+  //
+  //  public S visitNode(EmptyTypeNode n) throws E { throw new UnimplException(); }
+
 }
