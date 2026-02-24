@@ -69,8 +69,7 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
     Node n = null;
     if (c.PLUS() != null) n = new PlusNode(visit(c.exp(0)), visit(c.exp(1)));
     else if (c.MINUS() != null) n = new MinusNode(visit(c.exp(0)), visit(c.exp(1)));
-    n.setLine(c.PLUS() != null ? c.PLUS().getSymbol().getLine() :
-                      c.MINUS().getSymbol().getLine());
+    assert n != null;
     n.setLine(c.PLUS() != null ? c.PLUS().getSymbol().getLine() :
                       c.MINUS().getSymbol().getLine());
     return n;
@@ -99,6 +98,26 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
     n.setLine(c.EQ() != null ? c.EQ().getSymbol().getLine() :
                       c.GE() != null ? c.GE().getSymbol().getLine() :
                               c.LE().getSymbol().getLine());
+    return n;
+  }
+
+  @Override
+  public Node visitAndOr(AndOrContext c) {
+    if (print) printVarAndProdName(c);
+    Node n = null;
+    if (c.AND() != null) n = new AndNode(visit(c.exp(0)), visit(c.exp(1)));
+    else if (c.OR() != null) n = new OrNode(visit(c.exp(0)), visit(c.exp(1)));
+    assert n != null;
+    n.setLine(c.AND() != null ? c.AND().getSymbol().getLine() :
+                      c.OR().getSymbol().getLine());
+    return n;
+  }
+
+  @Override
+  public Node visitNot(NotContext c) {
+    if (print) printVarAndProdName(c);
+    Node n = new NotNode(visit(c.exp()));
+    n.setLine(c.NOT().getSymbol().getLine());
     return n;
   }
 

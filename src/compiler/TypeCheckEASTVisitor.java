@@ -94,17 +94,59 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode, TypeExceptio
     if (print) printNode(n);
     TypeNode l = visit(n.left);
     TypeNode r = visit(n.right);
+    // equality is defined for integers and booleans, so we check that both operands
+    // are subtypes of the same type
     if (!(isSubtype(l, r) || isSubtype(r, l)))
       throw new TypeException("Incompatible types in equal", n.getLine());
+    return new BoolTypeNode();
+  }
+
+  // New!
+  @Override
+  public TypeNode visitNode(GreaterEqualNode n) throws TypeException {
+    if (print) printNode(n);
+    TypeNode l = visit(n.left);
+    TypeNode r = visit(n.right);
+    // greater-equal is only defined for integers,
+    // so we check that both operands are subtypes of IntTypeNode
+    if (!(isSubtype(l, new IntTypeNode()) && isSubtype(r, new IntTypeNode())))
+      throw new TypeException("Non integers in greater-equal", n.getLine());
+    return new BoolTypeNode();
+  }
+
+  // New!
+  @Override
+  public TypeNode visitNode(LessEqualNode n) throws TypeException {
+    if (print) printNode(n);
+    TypeNode l = visit(n.left);
+    TypeNode r = visit(n.right);
+    // less-equal is only defined for integers,
+    // so we check that both operands are subtypes of IntTypeNode
+    if (!(isSubtype(l, new IntTypeNode()) && isSubtype(r, new IntTypeNode())))
+      throw new TypeException("Non integers in less-equal", n.getLine());
     return new BoolTypeNode();
   }
 
   @Override
   public TypeNode visitNode(TimesNode n) throws TypeException {
     if (print) printNode(n);
+    // multiplication is only defined for integers,
+    // so we check that both operands are subtypes of IntTypeNode
     if (!(isSubtype(visit(n.left), new IntTypeNode()) &&
             isSubtype(visit(n.right), new IntTypeNode())))
       throw new TypeException("Non integers in multiplication", n.getLine());
+    return new IntTypeNode();
+  }
+
+  // New!
+  @Override
+  public TypeNode visitNode(DivNode n) throws TypeException {
+    if (print) printNode(n);
+    // division is only defined for integers,
+    // so we check that both operands are subtypes of IntTypeNode
+    if (!(isSubtype(visit(n.left), new IntTypeNode()) &&
+            isSubtype(visit(n.right), new IntTypeNode())))
+      throw new TypeException("Non integers in division", n.getLine());
     return new IntTypeNode();
   }
 
@@ -115,6 +157,50 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode, TypeExceptio
             isSubtype(visit(n.right), new IntTypeNode())))
       throw new TypeException("Non integers in sum", n.getLine());
     return new IntTypeNode();
+  }
+
+  // New!
+  @Override
+  public TypeNode visitNode(MinusNode n) throws TypeException {
+    if (print) printNode(n);
+    if (!(isSubtype(visit(n.left), new IntTypeNode()) &&
+            isSubtype(visit(n.right), new IntTypeNode())))
+      throw new TypeException("Non integers in difference", n.getLine());
+    return new IntTypeNode();
+  }
+
+  // New!
+  @Override
+  public TypeNode visitNode(AndNode n) throws TypeException {
+    if (print) printNode(n);
+    // and is only defined for booleans,
+    // so we check that both operands are subtypes of BoolTypeNode
+    if (!(isSubtype(visit(n.left), new BoolTypeNode()) &&
+            isSubtype(visit(n.right), new BoolTypeNode())))
+      throw new TypeException("Non booleans in and", n.getLine());
+    return new BoolTypeNode();
+  }
+
+  // New!
+  public TypeNode visitNode(OrNode n) throws TypeException {
+    if (print) printNode(n);
+    // or is only defined for booleans,
+    // so we check that both operands are subtypes of BoolTypeNode
+    if (!(isSubtype(visit(n.left), new BoolTypeNode()) &&
+            isSubtype(visit(n.right), new BoolTypeNode())))
+      throw new TypeException("Non booleans in or", n.getLine());
+    return new BoolTypeNode();
+  }
+
+  // New!
+  @Override
+  public TypeNode visitNode(NotNode n) throws TypeException {
+    if (print) printNode(n);
+    // not is only defined for booleans,
+    // so we check that the operand is a subtype of BoolTypeNode
+    if (!(isSubtype(visit(n.exp), new BoolTypeNode())))
+      throw new TypeException("Non boolean in not", n.getLine());
+    return new BoolTypeNode();
   }
 
   @Override
@@ -132,7 +218,8 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode, TypeExceptio
       if (!(isSubtype(visit(n.arglist.get(i)), at.parlist.get(i))))
         throw new TypeException(
                 "Wrong type for " + (i + 1) + "-th parameter in the invocation of " +
-                        n.id, n.getLine()
+                        n.id,
+n.getLine()
         );
     return at.ret;
   }

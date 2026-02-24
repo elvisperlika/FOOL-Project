@@ -13,7 +13,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 public class Test {
   public static void main(String[] args) throws Exception {
 
-    String directory = "esempi/";
+    String directory = "examples/";
     String fileName = directory + "quicksort.fool";
 
     CharStream chars = CharStreams.fromFileName(fileName);
@@ -30,7 +30,7 @@ public class Test {
     ASTGenerationSTVisitor visitor =
             new ASTGenerationSTVisitor(); // use true to visualize the ST
     Node ast = visitor.visit(st);
-    System.out.println("");
+    System.out.println();
 
     System.out.println("Enriching AST via symbol table.");
     SymbolTableASTVisitor symtableVisitor = new SymbolTableASTVisitor();
@@ -39,7 +39,7 @@ public class Test {
 
     System.out.println("Visualizing Enriched AST.");
     new PrintEASTVisitor().visit(ast);
-    System.out.println("");
+    System.out.println();
 
     System.out.println("Checking Types.");
     try {
