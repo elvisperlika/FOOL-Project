@@ -233,4 +233,24 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
         );
     }
 
+    public String visitNode(OrNode n) {
+        if (print) printNode(n);
+        String labelTrue = freshLabel();
+        String labelEnd = freshLabel();
+        return nlJoin(
+                visit(n.left), // push the left branch
+                "push 1",             // push 0 to check if the left branch is false
+                "beq " + labelTrue,   // if left branch is false, jump to false label
+                visit(n.right),       // push the right branch
+                "push 1",             // push 0 to check if the right branch is true
+                "beq " + labelTrue,       // if right branch is true, got to label true
+                "push 0",             // push 1 to assert && is satisfied
+                "b " + labelEnd,      // jump to the end
+                labelTrue + ":",
+                "push 1",             // push 0 to assert result && is false
+                labelEnd + ":"
+        );
+    }
+
+
 }
