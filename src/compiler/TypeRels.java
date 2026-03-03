@@ -11,5 +11,4 @@ public class TypeRels {
     return a.getClass().equals(b.getClass()) ||
             ((a instanceof BoolTypeNode) && (b instanceof IntTypeNode));
   }
-
 }
