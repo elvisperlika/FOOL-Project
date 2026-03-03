@@ -421,6 +421,19 @@ public class AST {
     }
   }
 
+  public static class RefTypeNode extends TypeNode {
+    final String className;
+
+    public RefTypeNode(String className) {
+      this.className = className;
+    }
+
+    @Override
+    public <S, E extends Exception> S accept(BaseASTVisitor<S, E> visitor) throws E {
+      return visitor.visitNode(this);
+    }
+  }
+
   public static class ClassNode extends DecNode {
 
     List<TypeNode> fields;
