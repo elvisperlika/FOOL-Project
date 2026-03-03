@@ -493,7 +493,7 @@ public class ExecuteVisualVM {
     }
 
     private boolean lineHasBreakpoint() {
-        return this.codeLines.get(this.sourceMap[this.ip]).hasBreakpoint().orElse(false);
+        return this.ip < this.codeLineCount && this.codeLines.get(this.sourceMap[this.ip]).hasBreakpoint().orElse(false);
     }
 
 //    private int getBreakPointCount() {
