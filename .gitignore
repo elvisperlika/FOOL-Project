@@ -32,5 +32,5 @@ bin/
 .DS_Store
 
 ### IDEA
-.idea
-*.iml
+.idea/
+FOOL-Project.iml
