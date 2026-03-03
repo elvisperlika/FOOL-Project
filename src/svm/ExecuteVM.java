@@ -8,10 +8,10 @@ public class ExecuteVM {
   private int[] code;
   private int[] memory = new int[MEMSIZE];
 
-  private int ip = 0;
-  private int sp = MEMSIZE;
+  private int instructionPointer = 0;
+  private int stackPointer = MEMSIZE;
 
-  private int hp = 0;
+  private int heapPointer = 0;
   private int fp = MEMSIZE;
   private int ra;
   private int tm;
@@ -22,12 +22,12 @@ public class ExecuteVM {
 
   public void cpu() {
     while (true) {
-      int bytecode = code[ip++]; // fetch
+      int bytecode = code[instructionPointer++]; // fetch
       int v1, v2;
       int address;
       switch (bytecode) {
         case SVMParser.PUSH:
-          push(code[ip++]);
+          push(code[instructionPointer++]);
           break;
         case SVMParser.POP:
           pop();
@@ -60,25 +60,25 @@ public class ExecuteVM {
           push(memory[pop()]);
           break;
         case SVMParser.BRANCH:
-          address = code[ip];
-          ip = address;
+          address = code[instructionPointer];
+          instructionPointer = address;
           break;
         case SVMParser.BRANCHEQ:
-          address = code[ip++];
+          address = code[instructionPointer++];
           v1 = pop();
           v2 = pop();
-          if (v2 == v1) ip = address;
+          if (v2 == v1) instructionPointer = address;
           break;
         case SVMParser.BRANCHLESSEQ:
-          address = code[ip++];
+          address = code[instructionPointer++];
           v1 = pop();
           v2 = pop();
-          if (v2 <= v1) ip = address;
+          if (v2 <= v1) instructionPointer = address;
           break;
         case SVMParser.JS: //
           address = pop();
-          ra = ip;
-          ip = address;
+          ra = instructionPointer;
+          instructionPointer = address;
           break;
         case SVMParser.STORERA: //
           ra = pop();
@@ -99,16 +99,16 @@ public class ExecuteVM {
           fp = pop();
           break;
         case SVMParser.COPYFP: //
-          fp = sp;
+          fp = stackPointer;
           break;
         case SVMParser.STOREHP: //
-          hp = pop();
+          heapPointer = pop();
           break;
         case SVMParser.LOADHP: //
-          push(hp);
+          push(heapPointer);
           break;
         case SVMParser.PRINT:
-          System.out.println((sp < MEMSIZE) ? memory[sp] : "Empty stack!");
+          System.out.println((stackPointer < MEMSIZE) ? memory[stackPointer] : "Empty stack!");
           break;
         case SVMParser.HALT:
           return;
@@ -117,11 +117,11 @@ public class ExecuteVM {
   }
 
   private int pop() {
-    return memory[sp++];
+    return memory[stackPointer++];
   }
 
   private void push(int v) {
-    memory[--sp] = v;
+    memory[--stackPointer] = v;
   }
 
 }

@@ -9,18 +9,22 @@ import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
-import svm.ExecuteVM;
+import svm.ExecuteVisualVM;
 import svm.SVMLexer;
 import svm.SVMParser;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.List;
 
 public class Test {
   public static void main(String[] args) throws Exception {
 
     String directory = "examples/";
     String fileName = directory + "quicksort.fool";
+    List<String> source = Files.readAllLines(Paths.get(fileName));
 
     CharStream chars = CharStreams.fromFileName(fileName);
     FOOLLexer lexer = new FOOLLexer(chars);
@@ -32,21 +36,25 @@ public class Test {
     System.out.println("You had " + lexer.lexicalErrors + " lexical errors and " +
                                parser.getNumberOfSyntaxErrors() + " syntax errors.\n");
 
+    // # 1
     System.out.println("Generating AST.");
     ASTGenerationSTVisitor visitor =
             new ASTGenerationSTVisitor(); // use true to visualize the ST
     Node ast = visitor.visit(st);
     System.out.println();
 
+    // # 2
     System.out.println("Enriching AST via symbol table.");
     SymbolTableASTVisitor symtableVisitor = new SymbolTableASTVisitor();
     symtableVisitor.visit(ast);
     System.out.println("You had " + symtableVisitor.stErrors + " symbol table errors.\n");
 
+    // # 3
     System.out.println("Visualizing Enriched AST.");
     new PrintEASTVisitor().visit(ast);
     System.out.println();
 
+    // # 4
     System.out.println("Checking Types.");
     try {
       TypeCheckEASTVisitor typeCheckVisitor = new TypeCheckEASTVisitor();
@@ -67,6 +75,7 @@ public class Test {
 
     if (frontEndErrors > 0) System.exit(1);
 
+    // # 5
     System.out.println("Generating code.");
     String code = new CodeGenerationASTVisitor().visit(ast);
     BufferedWriter out = new BufferedWriter(new FileWriter(fileName + ".asm"));
@@ -89,9 +98,7 @@ public class Test {
 
     System.out.println("Running generated code via Stack Virtual Machine.");
 
-    // public ExecuteVM(int[] code, int[] sourceMap, List<String> source) {
-    // ExecuteVisualVM vm = new ExecuteVisualVM(parserASM.code, parserASM.sourceMap, );
-    ExecuteVM vm = new ExecuteVM(parserASM.code);
+    ExecuteVisualVM vm = new ExecuteVisualVM(parserASM.code, parserASM.sourceMap, source);
     vm.cpu();
 
   }

@@ -329,4 +329,14 @@ public class AST {
             throws E { return visitor.visitNode(this); }
   }
 
+  public static class ClassNode extends DecNode {
+
+    List<TypeNode> fields;
+
+    @Override
+    public <S, E extends Exception> S accept(BaseASTVisitor<S, E> visitor) throws E {
+      return null;
+    }
+  }
+
 }
