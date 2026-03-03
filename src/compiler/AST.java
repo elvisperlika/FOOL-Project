@@ -356,6 +356,14 @@ public class AST {
     }
   }
 
+  public static class EmptyNode extends Node {
+    
+    @Override
+    public <S, E extends Exception> S accept(BaseASTVisitor<S, E> visitor) throws E {
+      return visitor.visitNode(this);
+    }
+  }
+
   public static class ClassTypeNode extends TypeNode {
     final List<TypeNode> allFields;
     final List<ArrowTypeNode> allMethods;
