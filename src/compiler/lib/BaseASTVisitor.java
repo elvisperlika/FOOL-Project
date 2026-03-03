@@ -12,9 +12,12 @@ public class BaseASTVisitor<S, E extends Exception> {
   protected boolean print;    // enables printing
   protected String indent;
 
-  protected BaseASTVisitor() { }
+  protected BaseASTVisitor() {
+  }
 
-  protected BaseASTVisitor(boolean ie) { incomplExc = ie; }
+  protected BaseASTVisitor(boolean ie) {
+    incomplExc = ie;
+  }
 
   protected BaseASTVisitor(boolean ie, boolean p) {
     incomplExc = ie;
@@ -34,7 +37,7 @@ public class BaseASTVisitor<S, E extends Exception> {
   }
 
   public S visit(Visitable v, String mark)
-          throws E {   //when printing marks this visit with string mark
+      throws E {   //when printing marks this visit with string mark
     if (v == null) if (incomplExc) throw new IncomplException();
     else return null;
     if (print) {
@@ -44,7 +47,9 @@ public class BaseASTVisitor<S, E extends Exception> {
       try {
         S result = visitByAcc(v);
         return result;
-      } finally { indent = temp; }
+      } finally {
+        indent = temp;
+      }
     } else return visitByAcc(v);
   }
 
@@ -52,59 +57,109 @@ public class BaseASTVisitor<S, E extends Exception> {
     return v.accept(this);
   }
 
-  public S visitNode(ProgLetInNode n) throws E { throw new UnimplException(); }
+  public S visitNode(ProgLetInNode n) throws E {
+    throw new UnimplException();
+  }
 
-  public S visitNode(ProgNode n) throws E { throw new UnimplException(); }
+  public S visitNode(ProgNode n) throws E {
+    throw new UnimplException();
+  }
 
-  public S visitNode(FunNode n) throws E { throw new UnimplException(); }
+  public S visitNode(FunNode n) throws E {
+    throw new UnimplException();
+  }
 
-  public S visitNode(ParNode n) throws E { throw new UnimplException(); }
+  public S visitNode(ParNode n) throws E {
+    throw new UnimplException();
+  }
 
-  public S visitNode(VarNode n) throws E { throw new UnimplException(); }
+  public S visitNode(VarNode n) throws E {
+    throw new UnimplException();
+  }
 
-  public S visitNode(PrintNode n) throws E { throw new UnimplException(); }
+  public S visitNode(PrintNode n) throws E {
+    throw new UnimplException();
+  }
 
-  public S visitNode(IfNode n) throws E { throw new UnimplException(); }
+  public S visitNode(IfNode n) throws E {
+    throw new UnimplException();
+  }
 
-  public S visitNode(EqualNode n) throws E { throw new UnimplException(); }
+  public S visitNode(EqualNode n) throws E {
+    throw new UnimplException();
+  }
 
-  public S visitNode(TimesNode n) throws E { throw new UnimplException(); }
+  public S visitNode(TimesNode n) throws E {
+    throw new UnimplException();
+  }
 
-  public S visitNode(PlusNode n) throws E { throw new UnimplException(); }
+  public S visitNode(PlusNode n) throws E {
+    throw new UnimplException();
+  }
 
-  public S visitNode(CallNode n) throws E { throw new UnimplException(); }
+  public S visitNode(CallNode n) throws E {
+    throw new UnimplException();
+  }
 
-  public S visitNode(IdNode n) throws E { throw new UnimplException(); }
+  public S visitNode(IdNode n) throws E {
+    throw new UnimplException();
+  }
 
-  public S visitNode(BoolNode n) throws E { throw new UnimplException(); }
+  public S visitNode(BoolNode n) throws E {
+    throw new UnimplException();
+  }
 
-  public S visitNode(IntNode n) throws E { throw new UnimplException(); }
+  public S visitNode(IntNode n) throws E {
+    throw new UnimplException();
+  }
 
-  public S visitNode(ArrowTypeNode n) throws E { throw new UnimplException(); }
+  public S visitNode(ArrowTypeNode n) throws E {
+    throw new UnimplException();
+  }
 
-  public S visitNode(BoolTypeNode n) throws E { throw new UnimplException(); }
+  public S visitNode(BoolTypeNode n) throws E {
+    throw new UnimplException();
+  }
 
-  public S visitNode(IntTypeNode n) throws E { throw new UnimplException(); }
+  public S visitNode(IntTypeNode n) throws E {
+    throw new UnimplException();
+  }
 
   // OPERATOR EXTENSION
 
-  public S visitNode(GreaterEqualNode n) throws E { throw new UnimplException(); }
+  public S visitNode(GreaterEqualNode n) throws E {
+    throw new UnimplException();
+  }
 
-  public S visitNode(LessEqualNode n) throws E { throw new UnimplException(); }
+  public S visitNode(LessEqualNode n) throws E {
+    throw new UnimplException();
+  }
 
-  public S visitNode(NotNode n) throws E { throw new UnimplException(); }
+  public S visitNode(NotNode n) throws E {
+    throw new UnimplException();
+  }
 
-  public S visitNode(MinusNode n) throws E { throw new UnimplException(); }
+  public S visitNode(MinusNode n) throws E {
+    throw new UnimplException();
+  }
 
-  public S visitNode(OrNode n) throws E { throw new UnimplException(); }
+  public S visitNode(OrNode n) throws E {
+    throw new UnimplException();
+  }
 
-  public S visitNode(DivNode n) throws E { throw new UnimplException(); }
+  public S visitNode(DivNode n) throws E {
+    throw new UnimplException();
+  }
 
-  public S visitNode(AndNode n) throws E { throw new UnimplException(); }
+  public S visitNode(AndNode n) throws E {
+    throw new UnimplException();
+  }
 
   // OBJECT-ORIENTED EXTENSION
 
-  public S visitNode(ClassNode n) throws E { throw new UnimplException(); }
+  public S visitNode(ClassNode n) throws E {
+    throw new UnimplException();
+  }
   //
   //  public S visitNode(FieldNode node) throws E { throw new UnimplException(); }
   //
