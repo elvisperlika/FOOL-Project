@@ -19,18 +19,21 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
   public boolean print;
   String indent;
 
-  ASTGenerationSTVisitor() { }
+  ASTGenerationSTVisitor() {
+  }
 
-  ASTGenerationSTVisitor(boolean debug) { print = debug; }
+  ASTGenerationSTVisitor(boolean debug) {
+    print = debug;
+  }
 
   private void printVarAndProdName(ParserRuleContext ctx) {
     String prefix = "";
     Class<?> ctxClass = ctx.getClass(), parentClass = ctxClass.getSuperclass();
     if (!parentClass.equals(ParserRuleContext.class)) // parentClass is the var context (and not ctxClass itself)
       prefix =
-              lowerizeFirstChar(extractCtxName(parentClass.getName())) + ": production #";
+          lowerizeFirstChar(extractCtxName(parentClass.getName())) + ": production #";
     System.out.println(
-            indent + prefix + lowerizeFirstChar(extractCtxName(ctxClass.getName())));
+        indent + prefix + lowerizeFirstChar(extractCtxName(ctxClass.getName())));
   }
 
   @Override
@@ -71,7 +74,7 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
     else if (c.MINUS() != null) n = new MinusNode(visit(c.exp(0)), visit(c.exp(1)));
     assert n != null;
     n.setLine(c.PLUS() != null ? c.PLUS().getSymbol().getLine() :
-                      c.MINUS().getSymbol().getLine());
+        c.MINUS().getSymbol().getLine());
     return n;
   }
 
@@ -83,7 +86,7 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
     else if (c.DIV() != null) n = new DivNode(visit(c.exp(0)), visit(c.exp(1)));
     assert n != null;
     n.setLine(c.TIMES() != null ? c.TIMES().getSymbol().getLine() :
-                      c.DIV().getSymbol().getLine());
+        c.DIV().getSymbol().getLine());
     return n;
   }
 
@@ -96,8 +99,8 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
     else if (c.LE() != null) n = new LessEqualNode(visit(c.exp(0)), visit(c.exp(1)));
     assert n != null;
     n.setLine(c.EQ() != null ? c.EQ().getSymbol().getLine() :
-                      c.GE() != null ? c.GE().getSymbol().getLine() :
-                              c.LE().getSymbol().getLine());
+        c.GE() != null ? c.GE().getSymbol().getLine() :
+            c.LE().getSymbol().getLine());
     return n;
   }
 
@@ -109,7 +112,7 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
     else if (c.OR() != null) n = new OrNode(visit(c.exp(0)), visit(c.exp(1)));
     assert n != null;
     n.setLine(c.AND() != null ? c.AND().getSymbol().getLine() :
-                      c.OR().getSymbol().getLine());
+        c.OR().getSymbol().getLine());
     return n;
   }
 
@@ -146,11 +149,11 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
     Node n = null;
     if (c.ID().size() > 0) { //non-incomplete ST
       n = new FunNode(
-              c.ID(0).getText(),
-              (TypeNode) visit(c.type(0)),
-              parList,
-              decList,
-              visit(c.exp())
+          c.ID(0).getText(),
+          (TypeNode) visit(c.type(0)),
+          parList,
+          decList,
+          visit(c.exp())
       );
       n.setLine(c.FUN().getSymbol().getLine());
     }
