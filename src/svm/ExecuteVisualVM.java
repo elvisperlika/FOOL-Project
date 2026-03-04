@@ -10,22 +10,64 @@ import java.util.Vector;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public class ExecuteVisualVM {
+/**
+ * A code line with instruction and breakpoint if possible.
+ */
+interface CodeLine {
 
-  private static final Font FONT = new Font(Font.MONOSPACED, Font.PLAIN, 12);
+  static CodeLine simpleLine(String instruction) {
+    return new CodeLine() {
+      @Override
+      public Optional<Boolean> hasBreakpoint() {
+        return Optional.empty();
+      }
+
+      @Override
+      public void switchBreakpoint() {
+      }
+
+      @Override
+      public String getInstruction() {
+        return instruction;
+      }
+    };
+  }
+
+  static CodeLine lineWithBreakpoint(String instruction) {
+    return new CodeLine() {
+      private boolean breakpoint;
+
+      @Override
+      public Optional<Boolean> hasBreakpoint() {
+        return Optional.of(this.breakpoint);
+      }
+
+      @Override
+      public void switchBreakpoint() {
+        this.breakpoint = !this.breakpoint;
+      }
+
+      @Override
+      public String getInstruction() {
+        return instruction;
+      }
+    };
+  }
+
+  Optional<Boolean> hasBreakpoint();
+
+  void switchBreakpoint();
+
+  String getInstruction();
+}
+
+public class ExecuteVisualVM {
 
   public static final int MEMSIZE = 10000;
   public static final int CODESIZE = 10000;
-  private int[] code;
-  private int[] memory;
-
-  private int ip = 0;
-  private int sp = MEMSIZE; // punta al top dello stack
-
-  private int tm;
-  private int hp = 0;
-  private int ra;
-  private int fp = MEMSIZE;
+  public static final int BASE_WINDOW_SIZE = 800;
+  private static final int BASE_FONT_SIZE = 16;
+  private static final Font FONT = new Font(Font.MONOSPACED, Font.PLAIN, ScreenUtils.getFontSize(BASE_FONT_SIZE));
   private final List<CodeLine> codeLines = new ArrayList<>();
   private final JFrame frame;
   private final JPanel mainPanel;
@@ -42,12 +84,18 @@ public class ExecuteVisualVM {
   private final JLabel tmLabel, raLabel, fpLabel, ipLabel, spLabel, hpLabel;
   private final JScrollPane asmScroll, stackScroll, heapScroll, outputScroll;
   private final JTextArea outputText;
-
   private final int codeLineCount;
+  private final int[] code;
+  private final int[] sourceMap;
+  private final List<String> source;
+  private int[] memory;
+  private int ip = 0;
+  private int sp = MEMSIZE; // punta al top dello stack
+  private int tm;
+  private int hp = 0;
+  private int ra;
+  private int fp = MEMSIZE;
   private String keyboardCommand = "";
-
-  private int[] sourceMap;
-  private List<String> source;
   private int debugLineCode = 0;
 
   public ExecuteVisualVM(int[] code, int[] sourceMap, List<String> source) {
@@ -63,14 +111,19 @@ public class ExecuteVisualVM {
     this.buttonPanel = new JPanel();
     this.buttonPanel.setLayout(new BoxLayout(this.buttonPanel, BoxLayout.Y_AXIS));
     this.play = new JButton("PLAY");
+    this.play.setFont(FONT);
     this.play.addActionListener(e -> this.playButtonHandler());
     this.reset = new JButton("RESET");
+    this.reset.setFont(FONT);
     this.reset.addActionListener(e -> this.resetButtonHandler());
     this.backToBreakPoint = new JButton("BACK TO BREAK POINT");
+    this.backToBreakPoint.setFont(FONT);
     this.backToBreakPoint.addActionListener(e -> this.backToBreakPointButtonHandler());
     this.backStep = new JButton("BACK STEP");
+    this.backStep.setFont(FONT);
     this.backStep.addActionListener(e -> this.backStepButtonHandler());
     this.nextStep = new JButton("STEP");
+    this.nextStep.setFont(FONT);
     this.nextStep.addActionListener(e -> this.stepButtonHandler());
     this.buttonPanel.add(this.play);
     this.buttonPanel.add(this.nextStep);
@@ -123,25 +176,25 @@ public class ExecuteVisualVM {
       if (macro.length > 1) {
         if (printArgumentLineNumber) {
           codeLines.add(CodeLine.lineWithBreakpoint(String.format(
-                  "%5d: %s   | %5d: %s",
-                  realIp++,
-                  macro[0],
-                  realIp++,
-                  macro[1]
+              "%5d: %s   | %5d: %s",
+              realIp++,
+              macro[0],
+              realIp++,
+              macro[1]
           )));
         } else {
           codeLines.add(CodeLine.lineWithBreakpoint(String.format(
-                  "%5d: %s",
-                  realIp++,
-                  line
+              "%5d: %s",
+              realIp++,
+              line
           )));
           realIp++;
         }
       } else {
         codeLines.add(CodeLine.lineWithBreakpoint(String.format(
-                "%5d: %s",
-                realIp++,
-                line
+            "%5d: %s",
+            realIp++,
+            line
         )));
       }
     }
@@ -161,24 +214,34 @@ public class ExecuteVisualVM {
       }
 
       @Override
-      public void mousePressed(MouseEvent e) { }
+      public void mousePressed(MouseEvent e) {
+      }
 
       @Override
-      public void mouseReleased(MouseEvent e) { }
+      public void mouseReleased(MouseEvent e) {
+      }
 
       @Override
-      public void mouseEntered(MouseEvent e) { }
+      public void mouseEntered(MouseEvent e) {
+      }
 
       @Override
-      public void mouseExited(MouseEvent e) { }
+      public void mouseExited(MouseEvent e) {
+      }
     });
 
     this.asmScroll = new JScrollPane(
-            this.asmList,
-                                     JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
-                                     JScrollPane.HORIZONTAL_SCROLLBAR_NEVER
+        this.asmList,
+        JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+        JScrollPane.HORIZONTAL_SCROLLBAR_NEVER
     );
-    this.asmScroll.setBorder(BorderFactory.createTitledBorder("CODE"));
+    final int baseFontSize = 16;
+    final int suggestedFontSize = ScreenUtils.getFontSize(baseFontSize);
+    final var borderFont = new Font(Font.MONOSPACED, Font.PLAIN, suggestedFontSize);
+
+    final var asmScrollBorder = BorderFactory.createTitledBorder("CODE");
+    asmScrollBorder.setTitleFont(borderFont);
+    this.asmScroll.setBorder(asmScrollBorder);
     this.mainPanel.add(this.asmScroll, BorderLayout.EAST);
 
     this.stackList = new JList<>();
@@ -186,34 +249,42 @@ public class ExecuteVisualVM {
     this.heapList = new JList<>();
     removeListenersFrom(this.heapList);
 
-    this.stackList.setFont(new Font(Font.MONOSPACED, Font.BOLD, 16));
-    this.heapList.setFont(new Font(Font.MONOSPACED, Font.BOLD, 16));
+    final Font fontBold = new Font(Font.MONOSPACED, Font.BOLD, suggestedFontSize);
+    this.stackList.setFont(fontBold);
+    this.heapList.setFont(fontBold);
     this.stackScroll = new JScrollPane(
-            this.stackList,
-                                       JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
-                                       JScrollPane.HORIZONTAL_SCROLLBAR_NEVER
+        this.stackList,
+        JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+        JScrollPane.HORIZONTAL_SCROLLBAR_NEVER
     );
-    this.stackScroll.setBorder(BorderFactory.createTitledBorder("STACK"));
+
+    final var stackScrollBorder = BorderFactory.createTitledBorder("STACK");
+    stackScrollBorder.setTitleFont(borderFont);
+    this.stackScroll.setBorder(stackScrollBorder);
     this.heapScroll = new JScrollPane(
-            this.heapList,
-                                      JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
-                                      JScrollPane.HORIZONTAL_SCROLLBAR_NEVER
+        this.heapList,
+        JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+        JScrollPane.HORIZONTAL_SCROLLBAR_NEVER
     );
-    this.heapScroll.setBorder(BorderFactory.createTitledBorder("HEAP"));
+    final var heapScrollBorder = BorderFactory.createTitledBorder("HEAP");
+    heapScrollBorder.setTitleFont(borderFont);
+    this.heapScroll.setBorder(heapScrollBorder);
+
     this.memPanel = new JSplitPane(
-            JSplitPane.HORIZONTAL_SPLIT,
-                                   this.stackScroll,
-                                   this.heapScroll
+        JSplitPane.HORIZONTAL_SPLIT,
+        this.stackScroll,
+        this.heapScroll
     );
     this.mainPanel.add(this.memPanel, BorderLayout.CENTER);
 
     this.outputText = new JTextArea();
+    this.outputText.setFont(FONT);
     this.outputText.setRows(7);
     this.outputText.setEditable(false);
     this.outputScroll = new JScrollPane(
-            this.outputText,
-                                        JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
-                                        JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED
+        this.outputText,
+        JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+        JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED
     );
 
     setMem();
@@ -232,18 +303,21 @@ public class ExecuteVisualVM {
       }
 
       @Override
-      public void keyReleased(KeyEvent e) { }
+      public void keyReleased(KeyEvent e) {
+      }
 
       @Override
-      public void keyPressed(KeyEvent e) { }
+      public void keyPressed(KeyEvent e) {
+      }
     });
 
     this.update();
-    this.frame.setMinimumSize(new Dimension(800, 500));
+    this.frame.setPreferredSize(ScreenUtils.getMinimumSize(BASE_WINDOW_SIZE, BASE_WINDOW_SIZE));
     this.frame.pack();
+    this.frame.setLocation(ScreenUtils.getScreenCenter(this.frame));
 
     this.stackScroll.getVerticalScrollBar()
-            .setValue(this.stackScroll.getVerticalScrollBar().getMaximum());
+        .setValue(this.stackScroll.getVerticalScrollBar().getMaximum());
     this.memPanel.setDividerLocation(0.5);
 
     Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
@@ -348,8 +422,8 @@ public class ExecuteVisualVM {
 //                IntStream.range(0, MEMSIZE).mapToObj(x -> String.format("%5d: %s", x, x <= hp || x >= sp ? this.memory[x] : ""))
 //                        .collect(Collectors.toList())));
     final var mem = IntStream.range(0, MEMSIZE)
-            .mapToObj(x -> String.format("%5d: %s", x, this.memory[x]))
-            .collect(Collectors.toCollection(ArrayList::new));
+        .mapToObj(x -> String.format("%5d: %s", x, this.memory[x]))
+        .collect(Collectors.toCollection(ArrayList::new));
     mem.add(String.valueOf(MEMSIZE));
 
     var memory = new Vector<>(mem);
@@ -358,25 +432,25 @@ public class ExecuteVisualVM {
     this.stackList.clearSelection();
     this.stackList.setSelectedIndex(this.sp);
     this.stackScroll.getVerticalScrollBar()
-            .setValue(computeScrollDestination(
-                    this.stackScroll.getVerticalScrollBar(),
-                    this.sp
-            ));
+        .setValue(computeScrollDestination(
+            this.stackScroll.getVerticalScrollBar(),
+            this.sp
+        ));
 
     this.heapList.setListData(memory);
     this.heapList.clearSelection();
     this.heapList.setSelectedIndex(this.hp);
     this.heapScroll.getVerticalScrollBar()
-            .setValue(computeScrollDestination(
-                    this.heapScroll.getVerticalScrollBar(),
-                    this.hp
-            ));
+        .setValue(computeScrollDestination(
+            this.heapScroll.getVerticalScrollBar(),
+            this.hp
+        ));
   }
 
   private int computeScrollDestination(JScrollBar scroll, int pointer) {
     return Math.max(
-            pointer * (scroll.getMaximum() / MEMSIZE) - scroll.getHeight() / 2,
-            0
+        pointer * (scroll.getMaximum() / MEMSIZE) - scroll.getHeight() / 2,
+        0
     );
   }
 
@@ -391,7 +465,7 @@ public class ExecuteVisualVM {
     this.asmList.setSelectedIndex(this.sourceMap[this.ip]);
     final JScrollBar s = this.asmScroll.getVerticalScrollBar();
     int dest = this.sourceMap[this.ip] * s.getMaximum() / this.codeLineCount -
-            s.getHeight() / 2;
+        s.getHeight() / 2;
     s.setValue(Math.max(dest, 0));
     setMem();
     var condToDisableButton = this.ip != 0;
@@ -419,7 +493,7 @@ public class ExecuteVisualVM {
   }
 
   private boolean lineHasBreakpoint() {
-    return this.codeLines.get(this.sourceMap[this.ip]).hasBreakpoint().orElse(false);
+    return this.ip < this.codeLineCount && this.codeLines.get(this.sourceMap[this.ip]).hasBreakpoint().orElse(false);
   }
 
 //    private int getBreakPointCount() {
@@ -528,7 +602,7 @@ public class ExecuteVisualVM {
         break;
       case SVMParser.PRINT:
         final String output =
-                sp == MEMSIZE ? "EMPTY STACK" : Integer.toString(memory[sp]);
+            sp == MEMSIZE ? "EMPTY STACK" : Integer.toString(memory[sp]);
         System.out.println(output);
         this.outputText.append(output + "\n");
         break;
@@ -557,84 +631,96 @@ public class ExecuteVisualVM {
 
 }
 
-/**
- * A code line with instruction and breakpoint if possible.
- */
-interface CodeLine {
+class BreakpointIconStyle implements Icon {
 
-  Optional<Boolean> hasBreakpoint();
+  private final int dim;
 
-  void switchBreakpoint();
-
-  String getInstruction();
-
-  static CodeLine simpleLine(String instruction) {
-    return new CodeLine() {
-      @Override
-      public Optional<Boolean> hasBreakpoint() {
-        return Optional.empty();
-      }
-
-      @Override
-      public void switchBreakpoint() { }
-
-      @Override
-      public String getInstruction() {
-        return instruction;
-      }
-    };
+  public BreakpointIconStyle(int dimension) {
+    // We use the scaled dimension from ScreenUtils
+    this.dim = dimension;
   }
 
-  static CodeLine lineWithBreakpoint(String instruction) {
-    return new CodeLine() {
-      private boolean breakpoint;
+  @Override
+  public void paintIcon(Component component, Graphics g, int x, int y) {
+    AbstractButton button = (AbstractButton) component;
+    ButtonModel model = button.getModel();
+    Graphics2D g2d = (Graphics2D) g.create();
 
-      @Override
-      public Optional<Boolean> hasBreakpoint() {
-        return Optional.of(this.breakpoint);
-      }
+    // Enable Anti-aliasing for smooth circles
+    g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-      @Override
-      public void switchBreakpoint() {
-        this.breakpoint = !this.breakpoint;
-      }
+    int y_offset = (component.getHeight() - dim) / 2;
+    int x_offset = 2;
 
-      @Override
-      public String getInstruction() {
-        return instruction;
+    if (model.isSelected()) {
+      // --- DRAW ACTIVE BREAKPOINT (Red Circle) ---
+      g2d.setColor(new Color(200, 0, 0)); // Deep Red
+      g2d.fillOval(x_offset, y_offset, dim, dim);
+
+      // Subtle highlight for a 3D effect
+      g2d.setColor(new Color(255, 100, 100));
+      g2d.drawOval(x_offset, y_offset, dim, dim);
+    } else {
+      // --- DRAW INACTIVE STATE ---
+      if (model.isRollover()) {
+        // Ghost breakpoint on hover
+        g2d.setColor(new Color(200, 0, 0, 50));
+        g2d.fillOval(x_offset, y_offset, dim, dim);
       }
-    };
+      // Outline always visible or subtle
+      g2d.setColor(Color.LIGHT_GRAY);
+      g2d.drawOval(x_offset, y_offset, dim, dim);
+    }
+
+    g2d.dispose();
+  }
+
+  @Override
+  public int getIconWidth() {
+    return dim + 4; // Padding
+  }
+
+  @Override
+  public int getIconHeight() {
+    return dim;
   }
 }
 
-/**
- * Component rendering for CodeLine in JList.
- */
 class CodeLineCellRenderer extends JPanel implements ListCellRenderer<CodeLine> {
-  JLabel label;
-  JCheckBox checkBox;
+  private final JLabel label;
+  private final JCheckBox checkBox;
 
   public CodeLineCellRenderer() {
     setLayout(new BorderLayout());
+    setOpaque(true);
+
     checkBox = new JCheckBox();
+    checkBox.setOpaque(false); // Allows JPanel background to show through
+
+    // Use a base size of 20px and scale it proportionally
+    final int scaledDim = ScreenUtils.getScaledComponentSize(16);
+    final var icon = new BreakpointIconStyle(scaledDim);
+    checkBox.setIcon(icon);
+
     label = new JLabel();
+
     add(checkBox, BorderLayout.WEST);
     add(label, BorderLayout.CENTER);
-    checkBox.setEnabled(true);
   }
 
   @Override
   public Component getListCellRendererComponent(
-          JList<? extends CodeLine> list,
-          CodeLine value,
-          int index,
-          boolean isSelected,
-          boolean cellHasFocus
+      JList<? extends CodeLine> list,
+      CodeLine value,
+      int index,
+      boolean isSelected,
+      boolean cellHasFocus
   ) {
-
     label.setText(value.getInstruction());
+    label.setFont(list.getFont());
 
-    if (value.hasBreakpoint().isEmpty()) {
+    boolean noBreakpoint = value.hasBreakpoint().isEmpty();
+    if (noBreakpoint) {
       checkBox.setVisible(false);
     } else {
       checkBox.setVisible(true);
@@ -643,15 +729,12 @@ class CodeLineCellRenderer extends JPanel implements ListCellRenderer<CodeLine> 
 
     if (isSelected) {
       setBackground(list.getSelectionBackground());
-      setForeground(list.getSelectionForeground());
-      label.setBackground(list.getSelectionBackground());
       label.setForeground(list.getSelectionForeground());
     } else {
       setBackground(list.getBackground());
-      setForeground(list.getForeground());
-      label.setBackground(list.getBackground());
-      label.setForeground(list.getForeground());
+      label.setForeground(noBreakpoint ? Color.BLUE : list.getForeground());
     }
+
     return this;
   }
 }

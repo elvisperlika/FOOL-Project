@@ -38,7 +38,7 @@ public class FOOLlib {
 
   public static void putCode(String c) {
     funCode =
-            nlJoin(funCode, "", c); //linea vuota di separazione prima di codice funzione
+        nlJoin(funCode, "", c); //linea vuota di separazione prima di codice funzione
   }
 
   public static String getCode() {

@@ -30,3 +30,7 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+
+### IDEA
+.idea/
+FOOL-Project.iml

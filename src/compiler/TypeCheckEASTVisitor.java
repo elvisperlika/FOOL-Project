@@ -17,7 +17,9 @@ import static compiler.TypeRels.isSubtype;
 //visitSTentry(s) ritorna, per una STentry s, il tipo contenuto al suo interno
 public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode, TypeException> {
 
-  TypeCheckEASTVisitor() { super(true); } // enables incomplete tree exceptions
+  TypeCheckEASTVisitor() {
+    super(true);
+  } // enables incomplete tree exceptions
 
   TypeCheckEASTVisitor(boolean debug) {
     super(true, debug);
@@ -133,7 +135,7 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode, TypeExceptio
     // multiplication is only defined for integers,
     // so we check that both operands are subtypes of IntTypeNode
     if (!(isSubtype(visit(n.left), new IntTypeNode()) &&
-            isSubtype(visit(n.right), new IntTypeNode())))
+        isSubtype(visit(n.right), new IntTypeNode())))
       throw new TypeException("Non integers in multiplication", n.getLine());
     return new IntTypeNode();
   }
@@ -145,7 +147,7 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode, TypeExceptio
     // division is only defined for integers,
     // so we check that both operands are subtypes of IntTypeNode
     if (!(isSubtype(visit(n.left), new IntTypeNode()) &&
-            isSubtype(visit(n.right), new IntTypeNode())))
+        isSubtype(visit(n.right), new IntTypeNode())))
       throw new TypeException("Non integers in division", n.getLine());
     return new IntTypeNode();
   }
@@ -154,7 +156,7 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode, TypeExceptio
   public TypeNode visitNode(PlusNode n) throws TypeException {
     if (print) printNode(n);
     if (!(isSubtype(visit(n.left), new IntTypeNode()) &&
-            isSubtype(visit(n.right), new IntTypeNode())))
+        isSubtype(visit(n.right), new IntTypeNode())))
       throw new TypeException("Non integers in sum", n.getLine());
     return new IntTypeNode();
   }
@@ -164,7 +166,7 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode, TypeExceptio
   public TypeNode visitNode(MinusNode n) throws TypeException {
     if (print) printNode(n);
     if (!(isSubtype(visit(n.left), new IntTypeNode()) &&
-            isSubtype(visit(n.right), new IntTypeNode())))
+        isSubtype(visit(n.right), new IntTypeNode())))
       throw new TypeException("Non integers in difference", n.getLine());
     return new IntTypeNode();
   }
@@ -176,7 +178,7 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode, TypeExceptio
     // and is only defined for booleans,
     // so we check that both operands are subtypes of BoolTypeNode
     if (!(isSubtype(visit(n.left), new BoolTypeNode()) &&
-            isSubtype(visit(n.right), new BoolTypeNode())))
+        isSubtype(visit(n.right), new BoolTypeNode())))
       throw new TypeException("Non booleans in and", n.getLine());
     return new BoolTypeNode();
   }
@@ -187,7 +189,7 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode, TypeExceptio
     // or is only defined for booleans,
     // so we check that both operands are subtypes of BoolTypeNode
     if (!(isSubtype(visit(n.left), new BoolTypeNode()) &&
-            isSubtype(visit(n.right), new BoolTypeNode())))
+        isSubtype(visit(n.right), new BoolTypeNode())))
       throw new TypeException("Non booleans in or", n.getLine());
     return new BoolTypeNode();
   }
@@ -211,15 +213,15 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode, TypeExceptio
       throw new TypeException("Invocation of a non-function " + n.id, n.getLine());
     ArrowTypeNode at = (ArrowTypeNode) t;
     if (!(at.parlist.size() == n.arglist.size())) throw new TypeException(
-            "Wrong number of parameters in the invocation of " + n.id,
-            n.getLine()
+        "Wrong number of parameters in the invocation of " + n.id,
+        n.getLine()
     );
     for (int i = 0; i < n.arglist.size(); i++)
       if (!(isSubtype(visit(n.arglist.get(i)), at.parlist.get(i))))
         throw new TypeException(
-                "Wrong type for " + (i + 1) + "-th parameter in the invocation of " +
-                        n.id,
-n.getLine()
+            "Wrong type for " + (i + 1) + "-th parameter in the invocation of " +
+                n.id,
+            n.getLine()
         );
     return at.ret;
   }

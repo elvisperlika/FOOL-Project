@@ -7,7 +7,9 @@ import compiler.lib.Node;
 
 public class PrintEASTVisitor extends BaseEASTVisitor<Void, VoidException> {
 
-  PrintEASTVisitor() { super(false, true); }
+  PrintEASTVisitor() {
+    super(false, true);
+  }
 
   @Override
   public Void visitNode(ProgLetInNode n) {
@@ -106,7 +108,23 @@ public class PrintEASTVisitor extends BaseEASTVisitor<Void, VoidException> {
   }
 
   @Override
+  public Void visitNode(DivNode n) {
+    printNode(n);
+    visit(n.left);
+    visit(n.right);
+    return null;
+  }
+
+  @Override
   public Void visitNode(PlusNode n) {
+    printNode(n);
+    visit(n.left);
+    visit(n.right);
+    return null;
+  }
+
+  @Override
+  public Void visitNode(MinusNode n) {
     printNode(n);
     visit(n.left);
     visit(n.right);
@@ -131,6 +149,18 @@ public class PrintEASTVisitor extends BaseEASTVisitor<Void, VoidException> {
   @Override
   public Void visitNode(BoolNode n) {
     printNode(n, n.val.toString());
+    return null;
+  }
+
+  @Override
+  public Void visitNode(AndNode n) {
+    printNode(n);
+    return null;
+  }
+
+  @Override
+  public Void visitNode(OrNode n) {
+    printNode(n);
     return null;
   }
 
