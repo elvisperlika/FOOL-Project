@@ -11,10 +11,12 @@ import java.util.List;
 public class AST {
 
   public static class ProgLetInNode extends Node {
+    final List<ClassNode> classlist;
     final List<DecNode> declist;
     final Node exp;
 
-    ProgLetInNode(List<DecNode> d, Node e) {
+    ProgLetInNode(List<ClassNode> c, List<DecNode> d, Node e) {
+      classlist = Collections.unmodifiableList(c);
       declist = Collections.unmodifiableList(d);
       exp = e;
     }
@@ -399,7 +401,18 @@ public class AST {
     }
   }
 
-  public static class FieldNode {}
-  public static class MethodNode {}
+  public static class FieldNode extends Node {
+    @Override
+    public <S, E extends Exception> S accept(BaseASTVisitor<S, E> visitor) throws E {
+      return null;
+    }
+  }
+
+  public static class MethodNode extends Node {
+    @Override
+    public <S, E extends Exception> S accept(BaseASTVisitor<S, E> visitor) throws E {
+      return null;
+    }
+  }
 
 }
