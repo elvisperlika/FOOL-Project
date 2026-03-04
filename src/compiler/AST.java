@@ -369,6 +369,36 @@ public class AST {
     }
   }
 
+  public static class NewNode extends Node {
+
+    /**
+     * The name of the class whose instance is being created.
+     */
+    final String ID;
+    /**
+     * The list of arguments passed to the constructor of the class,
+     * in the order they are declared.
+     */
+    final List<Node> arglist;
+    /**
+     * The Symbol Table Entry of the class whose instance is being created.
+     * Used during type checking.
+     */
+    STentry entry;
+
+    public NewNode(String id, List<Node> arglist) {
+      this.ID = id;
+      this.arglist = arglist;
+    }
+
+    public void setEntry(STentry entry) { this.entry = entry; }
+
+    @Override
+    public <S, E extends Exception> S accept(BaseASTVisitor<S, E> visitor) throws E {
+      return visitor.visitNode(this);
+    }
+  }
+
   public static class FieldNode {}
   public static class MethodNode {}
 
