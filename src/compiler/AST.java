@@ -399,4 +399,20 @@ public class AST {
     }
   }
 
+  public static class FieldNode extends DecNode {
+
+    final String id; // field name
+    int offset; // field offset in object layout
+
+    FieldNode(String i, TypeNode t) {
+      id = i;
+      type = t;
+    }
+
+    @Override
+    public <S, E extends Exception> S accept(BaseASTVisitor<S, E> visitor) throws E {
+      return null;
+    }
+  }
+
 }
