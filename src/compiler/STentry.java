@@ -10,6 +10,12 @@ public class STentry implements Visitable {
   final TypeNode type;
   final int offset;
 
+  /**
+   * Constructor for STentry.
+   * @param n nesting level of the declaration
+   * @param t type of the declaration
+   * @param o offset of the declaration
+   */
   public STentry(int n, TypeNode t, int o) {
     nl = n;
     type = t;

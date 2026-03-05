@@ -245,7 +245,6 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
   public Node visitCldec(CldecContext c) {
     if (print) printVarAndProdName(c);
 
-    // Get the class's name
     String id = c.ID(0).getText();
     String superId = null;
     List<FieldNode> fieldsList;
@@ -264,7 +263,7 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
         methodList.add((MethodNode) visit(methdec)));
 
     ClassNode classNode = null;
-    if (!c.ID().isEmpty()) {
+    if (!c.ID().isEmpty()) { // non-incomplete ST
       classNode = new ClassNode(id, fieldsList, methodList, superId);
       classNode.setLine(c.ID(0).getSymbol().getLine());
     }

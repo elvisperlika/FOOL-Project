@@ -16,7 +16,7 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void, VoidException> {
   // counter for offset of local declarations at current nesting level
   int stErrors = 0;
   private List<Map<String, STentry>> symTable = new ArrayList<>();
-  private List<Map<String, STentry>> virtualTable = new ArrayList<>();
+  private Map<String, Map<String,STentry>> classTable = new HashMap<>();
   private int nestingLevel = 0; // current nesting level
   private int decOffset = -2;
 
@@ -244,6 +244,29 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void, VoidException> {
     if (print) printNode(n);
     visit(n.left);
     visit(n.right);
+    return null;
+  }
+
+  @Override
+  public Void visitNode(ClassNode n) {
+    if (print) printNode(n);
+    STentry sTentry = null;
+    if (n.superID != null) {
+      // extend case
+      Map<String,STentry> superVirtualTable = Map.copyOf(classTable.get(n.superID));
+      if (classTable.put(n.ID, superVirtualTable) != null) {
+        System.out.println("Class id " + n.ID + " at line " + n.getLine() + " already declared");
+        stErrors++;
+      }
+    } else {
+      // no extend case
+      if (classTable.put(n.ID, new HashMap<>()) != null) {
+        System.out.println("Class id " + n.ID + " at line " + n.getLine() + " already declared");
+        stErrors++;
+      }
+    }
+
+
     return null;
   }
 }
