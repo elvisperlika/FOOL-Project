@@ -271,4 +271,9 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
   }
 
 
+  public String visitNode(EmptyNode n) {
+    if (print) printNode(n);
+    return "push -1";
+  }
+
 }

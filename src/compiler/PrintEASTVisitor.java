@@ -171,6 +171,12 @@ public class PrintEASTVisitor extends BaseEASTVisitor<Void, VoidException> {
   }
 
   @Override
+  public Void visitNode(EmptyNode n) {
+    printNode(n);
+    return null;
+  }
+
+  @Override
   public Void visitNode(ArrowTypeNode n) {
     printNode(n);
     for (Node par : n.parlist) visit(par);

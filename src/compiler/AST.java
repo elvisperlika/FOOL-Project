@@ -5,6 +5,7 @@ import compiler.lib.DecNode;
 import compiler.lib.Node;
 import compiler.lib.TypeNode;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -357,6 +358,29 @@ public class AST {
     }
   }
 
+  public static class EmptyNode extends Node {
+
+    @Override
+    public <S, E extends Exception> S accept(BaseASTVisitor<S, E> visitor) throws E {
+      return visitor.visitNode(this);
+    }
+  }
+
+  public static class ClassTypeNode extends TypeNode {
+    final List<TypeNode> allFields;
+    final List<ArrowTypeNode> allMethods;
+
+    public ClassTypeNode(List<TypeNode> allFields, List<ArrowTypeNode> allMethods) {
+      this.allFields = allFields;
+      this.allMethods = allMethods;
+    }
+
+    @Override
+    public <S, E extends Exception> S accept(BaseASTVisitor<S, E> visitor) throws E {
+      return visitor.visitNode(this);
+    }
+  }
+
   public static class ArrowTypeNode extends TypeNode {
     final List<TypeNode> parlist;
     final TypeNode ret;
@@ -387,6 +411,27 @@ public class AST {
     @Override
     public <S, E extends Exception> S accept(BaseASTVisitor<S, E> visitor)
         throws E {
+      return visitor.visitNode(this);
+    }
+  }
+
+  public static class EmptyTypeNode extends TypeNode {
+
+    @Override
+    public <S, E extends Exception> S accept(BaseASTVisitor<S, E> visitor) throws E {
+      return visitor.visitNode(this);
+    }
+  }
+
+  public static class RefTypeNode extends TypeNode {
+    final String className;
+
+    public RefTypeNode(String className) {
+      this.className = className;
+    }
+
+    @Override
+    public <S, E extends Exception> S accept(BaseASTVisitor<S, E> visitor) throws E {
       return visitor.visitNode(this);
     }
   }
