@@ -13,9 +13,10 @@ import java.util.Map;
 
 public class SymbolTableASTVisitor extends BaseASTVisitor<Void, VoidException> {
 
-  private final List<Map<String, STentry>> symTable = new ArrayList<>();
   // counter for offset of local declarations at current nesting level
   int stErrors = 0;
+  private List<Map<String, STentry>> symTable = new ArrayList<>();
+  private List<Map<String, STentry>> virtualTable = new ArrayList<>();
   private int nestingLevel = 0; // current nesting level
   private int decOffset = -2;
 
@@ -249,6 +250,12 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void, VoidException> {
     if (print) printNode(n);
     visit(n.left);
     visit(n.right);
+    return null;
+  }
+
+  @Override
+  public Void visitNode(FieldNode n) {
+    if (print) printNode(n, n.id);
     return null;
   }
 }

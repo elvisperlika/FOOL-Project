@@ -263,7 +263,14 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
         labelEnd + ":"
     );
   }
-  
+
+  @Override
+  public String visitNode(FieldNode n) {
+    if (print) printNode(n, n.id);
+    return ""; // Does not generate code
+  }
+
+
   public String visitNode(EmptyNode n) {
     if (print) printNode(n);
     return "push -1";

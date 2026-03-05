@@ -55,9 +55,16 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
   @Override
   public Node visitLetInProg(LetInProgContext c) {
     if (print) printVarAndProdName(c);
-    List<DecNode> declist = new ArrayList<>();
-    for (DecContext dec : c.dec()) declist.add((DecNode) visit(dec));
-    return new ProgLetInNode(declist, visit(c.exp()));
+
+    // Visit all classes declarations
+    List<ClassNode> classList = new ArrayList<>();
+    for (CldecContext cldec : c.cldec()) classList.add((ClassNode) visit(cldec));
+
+    // Visit all declarations
+    List<DecNode> decList = new ArrayList<>();
+    for (DecContext dec : c.dec()) decList.add((DecNode) visit(dec));
+
+    return new ProgLetInNode(classList, decList, visit(c.exp()));
   }
 
   @Override
@@ -225,17 +232,78 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
   @Override
   public Node visitCall(CallContext c) {
     if (print) printVarAndProdName(c);
-    List<Node> arglist = new ArrayList<>();
-    for (ExpContext arg : c.exp()) arglist.add(visit(arg));
-    Node n = new CallNode(c.ID().getText(), arglist);
+    List<Node> argList = new ArrayList<>();
+    for (ExpContext arg : c.exp()) argList.add(visit(arg));
+    Node n = new CallNode(c.ID().getText(), argList);
     n.setLine(c.ID().getSymbol().getLine());
     return n;
+  }
+
+  // Object-Oriented Programming extensions
+
+  @Override
+  public Node visitCldec(CldecContext c) {
+    if (print) printVarAndProdName(c);
+
+    // Get the class's name
+    String id = c.ID(0).getText();
+    String superId = null;
+    List<FieldNode> fieldsList = new ArrayList<>();
+    int declOffset = 1;
+    // Check if the class extends another class and,
+    // if so, get the name of the superclass and update
+    // the offset for the fields declarations
+    if (c.EXTENDS() != null) {
+      superId = c.ID(declOffset).getText();
+      declOffset++;
+    }
+
+    // Visit all fields declarations
+    for (int i = declOffset; i < c.ID().size(); i++) {
+      // The field name is at index i
+      String fieldId = c.ID(i).getText();
+
+      // The field type is offset by declOffset
+      TypeNode fieldType = (TypeNode) visit(c.type(i - declOffset));
+
+      // Create the FieldNode (defined in AST.java)
+      FieldNode fieldNode = new FieldNode(fieldId, fieldType);
+
+      // Set the exact line where the field name is located
+      fieldNode.setLine(c.ID(i).getSymbol().getLine());
+
+      // Add to the list
+      fieldsList.add(fieldNode);
+    }
+
+    List<MethodNode> methodList = new ArrayList<>();
+    c.methdec().forEach(methdec ->
+        methodList.add((MethodNode) visit(methdec)));
+
+    ClassNode classNode = null;
+    if (!c.ID().isEmpty()) {
+      classNode = new ClassNode(id, fieldsList, methodList, superId);
+      classNode.setLine(c.ID(0).getSymbol().getLine());
+    }
+    return classNode;
+  }
+
+  @Override
+  public Node visitNew(NewContext c) {
+    if (print) printVarAndProdName(c);
+    String id = c.ID().getText();
+    List<Node> argList = new ArrayList<>();
+    for (ExpContext arg : c.exp()) argList.add(visit(arg));
+    Node newNode = new NewNode(id, argList);
+    newNode.setLine(c.ID().getSymbol().getLine());
+    return newNode;
   }
 
   @Override
   public Node visitNull(NullContext c) {
     if (print) printVarAndProdName(c);
     EmptyNode n = new EmptyNode();
+    n.setLine(c.NULL().getSymbol().getLine());
     return n;
   }
 }
