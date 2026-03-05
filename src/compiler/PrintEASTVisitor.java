@@ -199,4 +199,15 @@ public class PrintEASTVisitor extends BaseEASTVisitor<Void, VoidException> {
     return null;
   }
 
+  @Override
+  public Void visitNode(FieldNode n) {
+    // Print field name
+    printNode(n, n.id);
+
+    // Print field type
+    visit(n.getType());
+
+    return null;
+  }
+
 }

@@ -248,7 +248,7 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
     // Get the class's name
     String id = c.ID(0).getText();
     String superId = null;
-    List<FieldNode> fieldsList;
+    List<FieldNode> fieldsList = new ArrayList<>();
     int declOffset = 1;
     // Check if the class extends another class and,
     // if so, get the name of the superclass and update
@@ -257,7 +257,24 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
       superId = c.ID(declOffset).getText();
       declOffset++;
     }
-    fieldsList = getFields(declOffset, c);
+
+    // Visit all fields declarations
+    for (int i = 0; i < c.type().size(); i++) {
+      // The field name is offset by declOffset
+      String fieldId = c.ID(declOffset + i).getText();
+
+      // The field type starts regularly from 0
+      TypeNode fieldType = (TypeNode) visit(c.type(i));
+
+      // Create the FieldNode (defined in AST.java)
+      FieldNode fieldNode = new FieldNode(fieldId, fieldType);
+
+      // Set the exact line where the field name is located
+      fieldNode.setLine(c.ID(declOffset + i).getSymbol().getLine());
+
+      // Add to the list
+      fieldsList.add(fieldNode);
+    }
 
     List<MethodNode> methodList = new ArrayList<>();
     c.methdec().forEach(methdec ->
@@ -269,14 +286,6 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
       classNode.setLine(c.ID(0).getSymbol().getLine());
     }
     return classNode;
-  }
-
-  private List<FieldNode> getFields(int index, CldecContext c) {
-    List<FieldNode> fieldNodes = new ArrayList<>();
-    for (int i = index; i < c.ID().size(); i++) {
-      // TODO: is needed the FieldNode implementation to complete this function
-    }
-    return fieldNodes;
   }
 
   @Override
