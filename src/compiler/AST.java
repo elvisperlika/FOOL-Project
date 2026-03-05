@@ -11,10 +11,12 @@ import java.util.List;
 public class AST {
 
   public static class ProgLetInNode extends Node {
+    final List<ClassNode> classlist;
     final List<DecNode> declist;
     final Node exp;
 
-    ProgLetInNode(List<DecNode> d, Node e) {
+    ProgLetInNode(List<ClassNode> c, List<DecNode> d, Node e) {
+      classlist = Collections.unmodifiableList(c);
       declist = Collections.unmodifiableList(d);
       exp = e;
     }
@@ -391,8 +393,80 @@ public class AST {
 
   public static class ClassNode extends DecNode {
 
-    List<TypeNode> fields;
+    /**
+     * The name of the class.
+     */
+    final String ID;
+    /**
+     * The name of the superclass, if any.
+     * If null, then the class does not extend any other class.
+     */
+    final String superID;
+    /**
+     * The list of fields and methods of the class, in the order they are declared.
+     */
+    final List<FieldNode> fields;
+    /**
+     * The list of methods of the class, in the order they are declared.
+     */
+    final List<MethodNode> methods;
 
+    ClassNode(String id, List<FieldNode> fields, List<MethodNode> methods,
+              String superID) {
+      this.ID = id;
+      this.fields = Collections.unmodifiableList(fields);
+      this.methods = Collections.unmodifiableList(methods);
+      this.superID = superID;
+    }
+
+    /**
+     * Set the type of this class node. Used during type checking.
+     *
+     * @param t the type of this class node
+     */
+    void setType(TypeNode t) {
+      type = t;
+    }
+
+    @Override
+    public <S, E extends Exception> S accept(BaseASTVisitor<S, E> visitor) throws E {
+      return visitor.visitNode(this);
+    }
+  }
+
+  public static class NewNode extends Node {
+
+    /**
+     * The name of the class whose instance is being created.
+     */
+    final String ID;
+    /**
+     * The list of arguments passed to the constructor of the class,
+     * in the order they are declared.
+     */
+    final List<Node> arglist;
+    /**
+     * The Symbol Table Entry of the class whose instance is being created.
+     * Used during type checking.
+     */
+    STentry entry;
+
+    public NewNode(String id, List<Node> arglist) {
+      this.ID = id;
+      this.arglist = arglist;
+    }
+
+    public void setEntry(STentry entry) {
+      this.entry = entry;
+    }
+
+    @Override
+    public <S, E extends Exception> S accept(BaseASTVisitor<S, E> visitor) throws E {
+      return visitor.visitNode(this);
+    }
+  }
+
+  public static class MethodNode extends Node {
     @Override
     public <S, E extends Exception> S accept(BaseASTVisitor<S, E> visitor) throws E {
       return null;
