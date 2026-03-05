@@ -247,6 +247,12 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode, TypeExceptio
     return new IntTypeNode();
   }
 
+  @Override
+  public TypeNode visitNode(EmptyNode n) {
+    if (print) printNode(n);
+    return new EmptyTypeNode();
+  }
+
 // gestione tipi incompleti	(se lo sono lancia eccezione)
 
   @Override
@@ -267,6 +273,12 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode, TypeExceptio
   public TypeNode visitNode(IntTypeNode n) {
     if (print) printNode(n);
     return null;
+  }
+
+  @Override
+  public TypeNode visitNode(FieldNode n) throws TypeException {
+    if (print) printNode(n, n.id);
+    return null; // TODO: check when implementing newnode typechecking
   }
 
 // STentry (ritorna campo type)

@@ -160,9 +160,27 @@ public class BaseASTVisitor<S, E extends Exception> {
   public S visitNode(ClassNode n) throws E {
     throw new UnimplException();
   }
-  //
-  //  public S visitNode(FieldNode node) throws E { throw new UnimplException(); }
-  //
+
+  public S visitNode(FieldNode node) throws E {
+    throw new UnimplException();
+  }
+
+  public S visitNode(ClassTypeNode n) throws E{
+    throw new UnimplException();
+  }
+
+  public S visitNode(EmptyNode n) throws E {
+    throw new UnimplException();
+  }
+
+  public S visitNode(EmptyTypeNode n) throws E {
+    throw new UnimplException();
+  }
+
+  public S visitNode(RefTypeNode n) throws E {
+    throw new UnimplException();
+  }
+
   //  public S visitNode(MethodNode n) throws E { throw new UnimplException(); }
   //
   //  public S visitNode(ClassCallNode node) throws E { throw new UnimplException(); }
@@ -171,12 +189,4 @@ public class BaseASTVisitor<S, E extends Exception> {
     throw new UnimplException();
   }
   //
-  //  public S visitNode(EmptyNode n) throws E { throw new UnimplException(); }
-  //
-  //  public S visitNode(ClassTypeNode n) throws E { throw new UnimplException(); }
-  //
-  //  public S visitNode(RefTypeNode n) throws E { throw new UnimplException(); }
-  //
-  //  public S visitNode(EmptyTypeNode n) throws E { throw new UnimplException(); }
-
 }
