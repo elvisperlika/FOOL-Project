@@ -180,6 +180,14 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
   }
 
   @Override
+  public Node visitIdType(IdTypeContext c) {
+    if (print) printVarAndProdName(c);
+    var n = new RefTypeNode(c.ID().getText());
+    n.setLine(c.ID().getSymbol().getLine());
+    return n;
+  }
+
+  @Override
   public Node visitInteger(IntegerContext c) {
     if (print) printVarAndProdName(c);
     int v = Integer.parseInt(c.NUM().getText());
