@@ -455,6 +455,10 @@ public class AST {
      * The list of methods of the class, in the order they are declared.
      */
     final List<MethodNode> methods;
+    /**
+     * Symbol Table Entry of the superclass, if any. Used during type checking.
+     */
+    STentry superEntry;
 
     ClassNode(String id, List<FieldNode> fields, List<MethodNode> methods,
               String superID) {
