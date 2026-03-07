@@ -515,10 +515,26 @@ public class AST {
     }
   }
 
-  public static class MethodNode extends Node {
+  public static class MethodNode extends DecNode {
+    final String id;
+    final TypeNode retType;
+    final List<ParNode> parlist;
+    final List<DecNode> declist;
+    final Node exp;
+
+    int offset; // Offset in the dispatch table
+    String label; // Assembly label for the generated code
+
+    MethodNode(String i, TypeNode rt, List<ParNode> pl, List<DecNode> dl, Node e) {
+      id = i;
+      retType = rt;
+      parlist = Collections.unmodifiableList(pl);
+      declist = Collections.unmodifiableList(dl);
+      exp = e;
+    }
     @Override
     public <S, E extends Exception> S accept(BaseASTVisitor<S, E> visitor) throws E {
-      return null;
+      return visitor.visitNode(this);
     }
   }
 

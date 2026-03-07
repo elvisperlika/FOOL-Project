@@ -351,4 +351,66 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void, VoidException> {
     if (print) printNode(n, n.id);
     return null;
   }
+
+  public Void visitNode(MethodNode n) {
+    if (print) printNode(n);
+
+    // 1. Get the current Symbol Table level
+    Map<String, STentry> hm = symTable.get(nestingLevel);
+
+    // 2. Build the functional type of the method
+    List<TypeNode> parTypes = new ArrayList<>();
+    for (ParNode par : n.parlist) parTypes.add(par.getType());
+    TypeNode methodType = new ArrowTypeNode(parTypes, n.retType);
+
+    // TODO: per type checking può servire un n.setType?
+
+    // 3. Insert method in Virtual Table and handle Overriding
+    STentry oldEntry = hm.get(n.id);
+    STentry newEntry;
+
+    if (oldEntry != null) {
+      // Check that we are not overriding a non-method
+      if (!(oldEntry.type instanceof ArrowTypeNode)) {
+        System.out.println(
+            "Method id " + n.id + " at line " + n.getLine() + " cannot override field");
+        stErrors++;
+      }
+      // Overriding. We replace the entry but keep the old offset
+      newEntry = new STentry(nestingLevel, methodType, oldEntry.offset);
+    } else {
+      // New method. We assign a new offset
+      newEntry = new STentry(nestingLevel, methodType, decOffset++);
+    }
+
+    n.offset = newEntry.offset;
+    hm.put(n.id, newEntry);
+
+    // 4. Open a new scope for the mothod's parameters and local declarations
+    nestingLevel++;
+    Map<String, STentry> hmn = new HashMap<>();
+    symTable.add(hmn);
+
+    int prevNLDecOffset = decOffset; // Save the offset counter for methods
+    decOffset = -2; // Reset the offset counter for parameters and local variables
+
+    // 5. Insert parameters in the method scope
+    int parOffset = 1; // Parameters start at offset 1
+    for (ParNode par : n.parlist) {
+      if (hmn.put(par.id, new STentry(nestingLevel, par.getType(), parOffset++)) != null) {
+        System.out.println("Par id " + par.id + " at line " + n.getLine() + " already declared");
+        stErrors++;
+      }
+    }
+
+    // 6. Visit local declarations and method body
+    for (Node dec : n.declist) visit(dec);
+    visit(n.exp);
+
+    // 7. Close the method scope and restore the offset counter
+    symTable.remove(nestingLevel--);
+    decOffset = prevNLDecOffset; // Restore the offset counter for methods
+
+    return null;
+  }
 }

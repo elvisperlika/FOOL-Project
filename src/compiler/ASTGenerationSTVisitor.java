@@ -180,6 +180,14 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
   }
 
   @Override
+  public Node visitIdType(IdTypeContext c) {
+    if (print) printVarAndProdName(c);
+    var n = new RefTypeNode(c.ID().getText());
+    n.setLine(c.ID().getSymbol().getLine());
+    return n;
+  }
+
+  @Override
   public Node visitInteger(IntegerContext c) {
     if (print) printVarAndProdName(c);
     int v = Integer.parseInt(c.NUM().getText());
@@ -285,6 +293,36 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
       classNode.setLine(c.ID(0).getSymbol().getLine());
     }
     return classNode;
+  }
+
+  @Override
+  public Node visitMethdec(MethdecContext c) {
+    if (print) printVarAndProdName(c);
+
+    // Visit all parameters
+    List<ParNode> parList = new ArrayList<>();
+    // Start from 1 because the first ID is the method's name
+    for (int i = 1; i < c.ID().size(); i++) {
+      ParNode p = new ParNode(c.ID(i).getText(), (TypeNode) visit(c.type(i)));
+      p.setLine(c.ID(i).getSymbol().getLine());
+      parList.add(p);
+    }
+    // Visit all local declarations
+    List<DecNode> decList = new ArrayList<>();
+    for (DecContext dec : c.dec()) decList.add((DecNode) visit(dec));
+
+    Node n = null;
+    if (!c.ID().isEmpty()) { //non-incomplete ST
+      n = new MethodNode(
+          c.ID(0).getText(),
+          (TypeNode) visit(c.type(0)),
+          parList,
+          decList,
+          visit(c.exp())
+      );
+      n.setLine(c.FUN().getSymbol().getLine());
+    }
+    return n;
   }
 
   @Override
