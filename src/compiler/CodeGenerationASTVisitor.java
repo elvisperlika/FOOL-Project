@@ -159,6 +159,10 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
   public String visitNode(IdNode n) {
     if (print) printNode(n, n.id);
     String getAR = null;
+    // Risalgo (della differenza di nesting level) la catena statica per
+    // raggiungere l'AR che contiene la dichiarazione di "id"
+    // Se è un campo risalendo la catena l'ultimo passo finisco nell'oggetto quindi lo stesso
+    // meccanismo di risalita funziona sia per variabili che per campi
     for (int i = 0; i < n.nl - n.entry.nl; i++)
       getAR = nlJoin(getAR, "lw");
     return nlJoin(
