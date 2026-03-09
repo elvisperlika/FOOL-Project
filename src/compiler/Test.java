@@ -23,7 +23,7 @@ public class Test {
   public static void main(String[] args) throws Exception {
 
     String directory = "examples/";
-    String fileName = directory + "quicksort.fool";
+    String fileName = directory + "bankloan.fool";
     List<String> source = Files.readAllLines(Paths.get(fileName));
 
     CharStream chars = CharStreams.fromFileName(fileName);
