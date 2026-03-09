@@ -310,7 +310,7 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void, VoidException> {
     symTable.add(virtualTable);
     classTable.put(n.ID, virtualTable);
 
-    int fieldOffset = -n.fields.size() - 1;
+    int fieldOffset = -allFields.size() - 1;
     Set<String> newFields = new HashSet<>();
     for (FieldNode field : n.fields) {
       if (print) printNode(field);
@@ -348,12 +348,13 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void, VoidException> {
       virtualTable.put(field.id, fieldEntry);
 
       // Avoiding IndexOutOfBoundsException
-      // -offset-1 is the convertion to access the field type in the list of all fields,
+      // -offset-1 is the conversion to access the field type in the list of all fields,
       // since field offsets are negative and start from -1
-      if (allFields.get(-fieldEntry.offset - 1) != null) {
-        allFields.set(-fieldEntry.offset - 1, field.getType());
+      int index = -fieldEntry.offset - 1;
+      if (index < allFields.size()) {
+        allFields.set(index, field.getType());
       } else {
-        allFields.add(-fieldEntry.offset - 1, field.getType());
+        allFields.add(field.getType());
       }
     };
 
@@ -364,12 +365,13 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void, VoidException> {
     Set<String> newMethods = new HashSet<>();
 
     for (MethodNode method : n.methods) {
+      // Check for duplicate method names in the current class
       if (!newMethods.add(method.id)) {
         System.out.println("Method id " +  method.id + " at line " + method.getLine() + " already declared");
         stErrors++;
       }
       visit(method);
-      allMethods.add(method.offset, (ArrowTypeNode) method.getType());
+      allMethods.set(method.offset, (ArrowTypeNode) method.getType());
     }
 
     // Close the scope of the class and restore
