@@ -12,7 +12,14 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void, VoidException> {
 
   // counter for offset of local declarations at current nesting level
   int stErrors = 0;
+  /**
+   * The symbol table is a list of hashmaps, one for each nesting level.
+   * Each hashmap maps identifiers to their STentry.
+   */
   private List<Map<String, STentry>> symTable = new ArrayList<>();
+  /**
+   * The class table is a mapping from class names to their virtual tables.
+   */
   private Map<String, Map<String, STentry>> classTable = new HashMap<>();
   private int nestingLevel = 0; // current nesting level
   private int decOffset = -2;
@@ -71,7 +78,7 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void, VoidException> {
           "Fun id " + n.id + " at line " + n.getLine() + " already declared");
       stErrors++;
     }
-    //creare una nuova hashmap per la symTable
+    // Crea nuova hashmap per la symTable
     nestingLevel++;
     Map<String, STentry> hmn = new HashMap<>();
     symTable.add(hmn);
@@ -81,8 +88,7 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void, VoidException> {
 
     int parOffset = 1;
     for (ParNode par : n.parlist)
-      if (hmn.put(par.id, new STentry(nestingLevel, par.getType(), parOffset++)) !=
-          null) {
+      if (hmn.put(par.id, new STentry(nestingLevel, par.getType(), parOffset++)) != null) {
         System.out.println(
             "Par id " + par.id + " at line " + n.getLine() + " already declared");
         stErrors++;
@@ -101,7 +107,8 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void, VoidException> {
     if (print) printNode(n);
     visit(n.exp);
     Map<String, STentry> hm = symTable.get(nestingLevel);
-    STentry entry = new STentry(nestingLevel, n.getType(), decOffset--);
+    STentry entry = new STentry(nestingLevel, n.getType(), decOffset);
+    decOffset--;
     //inserimento di ID nella symtable
     if (hm.put(n.id, entry) != null) {
       System.out.println(
@@ -259,10 +266,11 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void, VoidException> {
   public Void visitNode(ClassNode n) {
     if (print) printNode(n);
 
+    int globalNestingLevel = 0;
     // Phase 1
 
     // Get the global symbol table (nesting level 0)
-    Map<String, STentry> globalSymTable = symTable.getFirst();
+    Map<String, STentry> globalSymTable = symTable.get(globalNestingLevel);
     List<TypeNode> allFields = new ArrayList<>();
     List<ArrowTypeNode> allMethods = new ArrayList<>();
 
@@ -270,12 +278,16 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void, VoidException> {
     // if found, add its fields and methods to the lists of all fields and methods of the current class
     if (n.superID != null) {
       n.superEntry = stLookup(n.superID);
+      // Get the ClassTypeNode of the superclass
       ClassTypeNode classTypeNode = (ClassTypeNode) n.superEntry.type;
+      // Copy the ClassTypeNode content
       allFields.addAll(classTypeNode.allFields);
       allMethods.addAll(classTypeNode.allMethods);
     }
     // Add the fields and methods declared in the current class to the lists of all fields and methods of the current class.
-    STentry sTentry = new STentry(0, new ClassTypeNode(allFields, allMethods), decOffset--);
+    STentry sTentry = new STentry(globalNestingLevel, new ClassTypeNode(allFields, allMethods), decOffset);
+    // Decrement the offset counter for the class declaration
+    decOffset--;
     n.setType(sTentry.type);
 
     // Store the STentry of the current class in the global symbol table, checking for duplicate declarations
@@ -285,16 +297,17 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void, VoidException> {
     }
 
     // Phase 2
-    // New level for the Symbol Table
+
+    // Open a new scope on getting into the class
     nestingLevel++;
     Map<String, STentry> virtualTable = new HashMap<>();
     if (n.superID != null) {
+      // Get the virtual table of the superclass and copy its content into the virtual table of the current class
       Map<String, STentry> superVirtualTable = classTable.get(n.superID);
       virtualTable.putAll(superVirtualTable);
     }
-    // ???
+
     symTable.add(virtualTable);
-    // Add Class name mapped with its virtual table
     classTable.put(n.ID, virtualTable);
 
     int fieldOffset = -n.fields.size() - 1;
@@ -304,6 +317,7 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void, VoidException> {
       STentry oldFieldEntry = virtualTable.get(field.id);
       STentry fieldEntry;
 
+      // Check if the field name is already in the set
       if (!newFields.add(field.id)) {
         System.out.println("Field id " +  field.id + " at line " + field.getLine() + " already declared");
         stErrors++;
@@ -329,19 +343,41 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void, VoidException> {
         fieldEntry = new STentry(nestingLevel, field.getType(), fieldOffset--);
       }
 
-      // ???
+      // Set offset of the field in the AST
       field.offset = fieldEntry.offset;
       virtualTable.put(field.id, fieldEntry);
-      allFields.add(-fieldEntry.offset - 1, field.getType());
+
+      // Avoiding IndexOutOfBoundsException
+      // -offset-1 is the convertion to access the field type in the list of all fields,
+      // since field offsets are negative and start from -1
+      if (allFields.get(-fieldEntry.offset - 1) != null) {
+        allFields.set(-fieldEntry.offset - 1, field.getType());
+      } else {
+        allFields.add(-fieldEntry.offset - 1, field.getType());
+      }
     };
 
+    // For methods, we don't need to convert the offset to access the method type
+    // in the list of all methods, since method offsets are positive and start from 0
     int previousDecOffset = decOffset;
     decOffset = allMethods.size();
-    List<String> newMethods = new ArrayList<>();
+    Set<String> newMethods = new HashSet<>();
 
     for (MethodNode method : n.methods) {
-      System.out.println("Method " + " in class " + n.ID);
+      if (!newMethods.add(method.id)) {
+        System.out.println("Method id " +  method.id + " at line " + method.getLine() + " already declared");
+        stErrors++;
+      }
+      visit(method);
+      allMethods.add(method.offset, (ArrowTypeNode) method.getType());
     }
+
+    // Close the scope of the class and restore
+    symTable.remove(nestingLevel);
+    // Reduce the nesting level since we are exiting the class scope
+    nestingLevel--;
+    // Restore the offset counter for fields and methods
+    decOffset = previousDecOffset;
 
     return null;
   }

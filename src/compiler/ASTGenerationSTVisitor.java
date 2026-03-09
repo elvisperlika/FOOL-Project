@@ -269,16 +269,12 @@ public class ASTGenerationSTVisitor extends FOOLBaseVisitor<Node> {
     for (int i = declOffset; i < c.ID().size(); i++) {
       // The field name is at index i
       String fieldId = c.ID(i).getText();
-
       // The field type is offset by declOffset
       TypeNode fieldType = (TypeNode) visit(c.type(i - declOffset));
-
       // Create the FieldNode (defined in AST.java)
       FieldNode fieldNode = new FieldNode(fieldId, fieldType);
-
       // Set the exact line where the field name is located
       fieldNode.setLine(c.ID(i).getSymbol().getLine());
-
       // Add to the list
       fieldsList.add(fieldNode);
     }

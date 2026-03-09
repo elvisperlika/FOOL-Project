@@ -5,13 +5,18 @@ import compiler.lib.BaseEASTVisitor;
 import compiler.lib.TypeNode;
 import compiler.lib.Visitable;
 
+/**
+ * Every time we meet a declaration,
+ * we create an STentry for it,
+ * which contains the nesting level of the declaration, its type and its offset.
+ */
 public class STentry implements Visitable {
   final int nl;
   final TypeNode type;
   final int offset;
 
   /**
-   * Constructor for STentry.
+   * Constructor for STentry (le palline di Natale).
    * @param n nesting level of the declaration
    * @param t type of the declaration
    * @param o offset of the declaration
