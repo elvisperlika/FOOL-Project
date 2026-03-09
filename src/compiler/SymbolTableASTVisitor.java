@@ -361,17 +361,32 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void, VoidException> {
     // For methods, we don't need to convert the offset to access the method type
     // in the list of all methods, since method offsets are positive and start from 0
     int previousDecOffset = decOffset;
+    // Start method offsets from the size of the inherited methods,
+    // to avoid conflicts with inherited method offsets
+    // If there are no inherited methods, method offsets will start from 0 as usual
     decOffset = allMethods.size();
+    // We use a set to keep track of the method names declared in the current class,
+    // to check for duplicate method declarations and to avoid overriding
+    // inherited methods with the same name
     Set<String> newMethods = new HashSet<>();
 
+    // Check for method overriding and add methods to the virtual table
     for (MethodNode method : n.methods) {
-      // Check for duplicate method names in the current class
+      if (print) printNode(method);
+      // Check that the method name is not already declared in the current class
+      // Avoiding methods with the same name in the same class
       if (!newMethods.add(method.id)) {
-        System.out.println("Method id " +  method.id + " at line " + method.getLine() + " already declared");
+        System.out.println("Method id " + method.id + " at line " + method.getLine() + " already declared");
         stErrors++;
       }
       visit(method);
-      allMethods.set(method.offset, (ArrowTypeNode) method.getType());
+      if (method.offset < allMethods.size()) {
+        // Overriding
+        allMethods.set(method.offset, (ArrowTypeNode) method.getType());
+      } else {
+        // New method
+        allMethods.add((ArrowTypeNode) method.getType());
+      }
     }
 
     // Close the scope of the class and restore
