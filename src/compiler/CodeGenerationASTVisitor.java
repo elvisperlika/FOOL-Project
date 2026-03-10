@@ -371,6 +371,7 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
       dispatchTable.addAll(superDispatchTable);
     }
     for (var method : n.methods) {
+      visitNode(method);
       if (method.offset < dispatchTable.size()) {
         dispatchTable.set(method.offset, method.label);
       } else {
