@@ -226,10 +226,13 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode, TypeExceptio
     return at.ret;
   }
 
+  // L'IdNode è tipo 'x', l'uso di una var. o di un par.
+  // La differenza tra un IdNode e un CallNode è che il CallNode ha le parentesi tonde dopo.
   @Override
   public TypeNode visitNode(IdNode n) throws TypeException {
     if (print) printNode(n, n.id);
     TypeNode t = visit(n.entry);
+    // Mi assicuro che non sia un tipo funzionale.
     if (t instanceof ArrowTypeNode)
       throw new TypeException("Wrong usage of function identifier " + n.id, n.getLine());
     return t;

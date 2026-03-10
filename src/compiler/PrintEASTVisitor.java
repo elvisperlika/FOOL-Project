@@ -255,4 +255,11 @@ public class PrintEASTVisitor extends BaseEASTVisitor<Void, VoidException> {
     return null;
   }
 
+  @Override
+  public Void visitNode(NewNode n) {
+    printNode(n, n.ID);
+    for (Node arg : n.arglist) visit(arg);
+    return null;
+  }
+
 }

@@ -381,8 +381,13 @@ public class AST {
     }
   }
 
+  /**
+   * Il tipo funzionale.
+   */
   public static class ArrowTypeNode extends TypeNode {
+    /** Parameter types */
     final List<TypeNode> parlist;
+    /** Return type */
     final TypeNode ret;
 
     ArrowTypeNode(List<TypeNode> p, TypeNode r) {
@@ -415,6 +420,7 @@ public class AST {
     }
   }
 
+  // It's the 'null' type
   public static class EmptyTypeNode extends TypeNode {
 
     @Override
@@ -455,6 +461,10 @@ public class AST {
      * The list of methods of the class, in the order they are declared.
      */
     final List<MethodNode> methods;
+    /**
+     * Symbol Table Entry of the superclass, if any. Used during type checking.
+     */
+    STentry superEntry;
 
     ClassNode(String id, List<FieldNode> fields, List<MethodNode> methods,
               String superID) {
