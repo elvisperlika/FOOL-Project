@@ -292,8 +292,8 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 
     // Next (1): get fields from the stack and put them in the heap
     String storeArgsCode = null;
-    for (Node arg : n.arglist)
-      argCode = nlJoin(
+    for (Node _ : n.arglist)
+      storeArgsCode = nlJoin(
           storeArgsCode,
           "lhp",      // load heap pointer on the stack
           "sw",       // pop the hp and the arg below it and store the arg in the heap at the hp address
