@@ -521,6 +521,28 @@ public class AST {
     }
   }
 
+  public static class ClassCallNode extends Node {
+    // ID1.ID2(arglist)
+    final String objectID; // the object on which the method is called
+    final String methodID; // the method being called
+    final List<Node> arglist; // the arguments passed to the method
+
+    STentry entry; // entry for the object instance (ID1)
+    STentry methodEntry; // entry for the method being called (ID2)
+    int nl; // nesting level of the object instance (ID1)
+
+    public ClassCallNode(String objectID, String methodID, List<Node> arglist) {
+      this.objectID = objectID;
+      this.methodID = methodID;
+      this.arglist = arglist;
+    }
+
+    @Override
+    public <S, E extends Exception> S accept(BaseASTVisitor<S, E> visitor) throws E {
+      return visitor.visitNode(this);
+    }
+  }
+
   public static class MethodNode extends DecNode {
     final String id;
     final TypeNode retType;

@@ -33,6 +33,7 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void, VoidException> {
 
   /**
    * Looks up id in the symbol table, starting from the current nesting level and going outward.
+   *
    * @param id the identifier to look up
    * @return the STentry associated with id, or null if id is not found in the symbol table
    */
@@ -262,6 +263,49 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void, VoidException> {
     return null;
   }
 
+  public Void visitNode(ClassCallNode n) {
+    // ID1.ID2(args)
+    if (print) printNode(n, n.objectID + "." + n.methodID);
+
+    // 1. Search for ID1 in the symbol table
+    STentry objEntry = stLookup(n.objectID);
+    if (objEntry == null) {
+      System.out.println("Object id " + n.objectID + " at line " + n.getLine() + " not declared");
+      stErrors++;
+    } else {
+      n.entry = objEntry;
+      n.nl = nestingLevel;
+
+      // 2. Check that ID1 is of RefType
+      if (!(objEntry.type instanceof RefTypeNode)) { // if not a reference
+        System.out.println("Object id " + n.objectID + " at line " + n.getLine() + " is not a reference");
+        stErrors++;
+      } else {
+        String className = ((RefTypeNode) objEntry.type).className;
+
+        // 3. Look for ID2 in the virtual table of the class of ID1
+        Map<String, STentry> virtualTable = classTable.get(className);
+
+        if (virtualTable == null) {
+          System.out.println("Class id " + className + " at line " + n.getLine() + " not declared");
+          stErrors++;
+        } else {
+          STentry methodEntry = virtualTable.get(n.methodID);
+          if (methodEntry == null) {
+            System.out.println("Method id " + n.methodID + " at line " + n.getLine()
+                + " not declared in class " + className);
+            stErrors++;
+          } else {
+            n.methodEntry = methodEntry;
+          }
+        }
+      }
+    }
+
+    for (Node arg : n.arglist) visit(arg);
+    return null;
+  }
+
   @Override
   public Void visitNode(ClassNode n) {
     if (print) printNode(n);
@@ -319,7 +363,7 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void, VoidException> {
 
       // Check if the field name is already in the set
       if (!newFields.add(field.id)) {
-        System.out.println("Field id " +  field.id + " at line " + field.getLine() + " already declared");
+        System.out.println("Field id " + field.id + " at line " + field.getLine() + " already declared");
         stErrors++;
       }
       // If there is already an entry for the field name in the virtual table,
@@ -356,7 +400,8 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void, VoidException> {
       } else {
         allFields.add(field.getType());
       }
-    };
+    }
+    ;
 
     // For methods, we don't need to convert the offset to access the method type
     // in the list of all methods, since method offsets are positive and start from 0
