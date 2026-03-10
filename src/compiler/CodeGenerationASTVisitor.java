@@ -4,6 +4,7 @@ import compiler.AST.*;
 import compiler.exc.VoidException;
 import compiler.lib.BaseASTVisitor;
 import compiler.lib.Node;
+import svm.ExecuteVisualVM;
 
 import static compiler.lib.FOOLlib.*;
 
@@ -275,9 +276,66 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
   }
 
 
+  @Override
   public String visitNode(EmptyNode n) {
     if (print) printNode(n);
     return "push -1";
   }
 
+  @Override
+  public String visitNode(NewNode n) {
+    if (print) printNode(n);
+    // Before: Save fields on the stack
+    String argCode = null;
+    for (Node arg : n.arglist)
+      argCode = nlJoin(argCode, visit(arg));
+
+    // Next (1): get fields from the stack and put them in the heap
+    String storeArgsCode = null;
+    for (Node _ : n.arglist)
+      storeArgsCode = nlJoin(
+          storeArgsCode,
+          "lhp",      // load heap pointer on the stack
+          "sw",       // pop the hp and the arg below it and store the arg in the heap at the hp address
+          increaseHeapPointer()
+      ); // store field value in heap
+
+    // Next (2): store class dispatch pointer in the heap
+    int classOffset = n.entry.offset; // get class offset in vtable
+    String storeDispatchPointerCode = nlJoin(
+        "push " + ExecuteVisualVM.MEMSIZE,
+        "push " + classOffset,
+        "add",        // compute address of class dispatch pointer
+        "lw",         // load class dispatch pointer replacing the address on the stack with its value
+        "lhp",        // load heap pointer on the stack
+        "sw"          // pop the hp and the dispatch pointer below it and store the dispatch pointer in the heap at the hp address
+    );
+
+    // Next (3): return the address of the new object on the stack
+    String returnObjectPointer = nlJoin(
+        "lhp",
+        increaseHeapPointer()
+    );
+
+    return nlJoin(
+        argCode,
+        storeArgsCode,
+        storeDispatchPointerCode,
+        returnObjectPointer
+    );
+  }
+
+  /**
+   * Generates code to increment the heap pointer by 1.
+   * This is used to allocate space for a new object in the heap.
+   * @return the code to increment the heap pointer
+   */
+  private String increaseHeapPointer() {
+    return nlJoin(
+        "lhp",      // load heap pointer on the stack
+        "push 1",   // push 1 on the stack
+        "add",      // increment heap pointer by 1
+        "shp"       // store the incremented heap pointer
+    );
+  }
 }
