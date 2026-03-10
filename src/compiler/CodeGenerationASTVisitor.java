@@ -354,10 +354,7 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
         "push " + label,
         "lhp",
         "sw", // store method address in the heap
-        "lhp",
-        "push 1",
-        "add", // push on the stack heap pointer + 1
-        "shp" // this increments the heap pointer by popping on the heap pointer the content of the stack (heap pointer + 1)
+        this.increaseHeapPointer()
     )));
     return generatedCode.toString();
   }
