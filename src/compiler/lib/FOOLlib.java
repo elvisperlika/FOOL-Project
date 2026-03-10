@@ -19,8 +19,10 @@ public class FOOLlib {
     return Character.toLowerCase(s.charAt(0)) + s.substring(1, s.length());
   }
 
-  // crea un'unica stringa a partire da un insieme di stringhe concatenadole e
-  // introducendo, all'interno, dei newline "\n" come separatore tra le stringhe
+  /**
+   * Crea un'unica stringa a partire da un insieme di stringhe concatenadole e
+   * introducendo, all'interno, dei newline "\n" come separatore tra le stringhe.
+   */
   public static String nlJoin(String... lines) { //argomenti null ignorati
     String code = null;
     for (int i = 0; i < lines.length; i++)
