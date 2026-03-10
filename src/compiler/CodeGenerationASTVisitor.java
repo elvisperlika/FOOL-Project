@@ -5,9 +5,13 @@ import compiler.exc.VoidException;
 import compiler.lib.BaseASTVisitor;
 import compiler.lib.Node;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static compiler.lib.FOOLlib.*;
 
 public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidException> {
+  private List<List<String>> dispatchTables = new ArrayList<>();
 
   CodeGenerationASTVisitor() {
   }
@@ -280,4 +284,42 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
     return "push -1";
   }
 
+  @Override
+  public String visitNode(ClassNode n) {
+    var dispatchTable = this.generateDispatchTable(n);
+    this.dispatchTables.add(dispatchTable); // Copy the row in the global dispatch table to make it available to this class' subclasses
+    var generatedCode = new StringBuilder();
+    generatedCode.append("lhp"); // Load heap pointer on the stack
+    dispatchTable.forEach(label -> generatedCode.append(nlJoin(
+        "push " + label,
+        "lhp",
+        "sw", // store method address in the heap
+        "lhp",
+        "push 1",
+        "add", // push on the stack heap pointer + 1
+        "shp" // this increments the heap pointer by popping on the heap pointer the content of the stack (heap pointer + 1)
+    )));
+    return generatedCode.toString();
+  }
+
+  private ArrayList<String> generateDispatchTable(ClassNode n) {
+    var dispatchTable = new ArrayList<String>();
+    var classOffset = -(this.dispatchTables.size() + 2);
+    if (n.superEntry != null) {
+      var superOffset = n.superEntry.offset;
+      /* The first declared class has offset -2, the second -3 and so on.
+       * Since the first offset is -2, we can get the first index as -(-2)-2
+       */
+      var superDispatchTable = this.dispatchTables.get(-superOffset - 2);
+      dispatchTable.addAll(superDispatchTable);
+    }
+    for (var method : n.methods) {
+      if (method.offset < dispatchTable.size()) {
+        dispatchTable.set(method.offset, method.label);
+      } else {
+        dispatchTable.add(method.label);
+      }
+    }
+    return dispatchTable;
+  }
 }
