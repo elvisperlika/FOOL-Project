@@ -319,9 +319,9 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode, TypeExceptio
     ArrowTypeNode at = (ArrowTypeNode) t;
 
     // 2. Check argument count
-    if (!(at.parlist.size() == n.arglist.size()))
+    if (at.parlist.size() != n.arglist.size())
       throw new TypeException(
-        "Wrong number of parameters in the invocation of " + n.methodID, n.getLine());
+          "Wrong number of parameters in the invocation of " + n.methodID, n.getLine());
 
     // 3. Check argument types
     for (int i = 0; i < n.arglist.size(); i++) {
@@ -350,6 +350,30 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode, TypeExceptio
       throw new TypeException("Wrong return type for method " + n.id, n.getLine());
 
     return null;
+  }
+
+  @Override
+  public TypeNode visitNode(NewNode n) throws TypeException {
+    if (print) printNode(n, n.ID);
+
+    // 1. Get the ClassTypeNode from the entry
+    TypeNode t = visit(n.entry);
+    if (!(t instanceof ClassTypeNode))
+      throw new TypeException("Instantiation of a non-class " + n.ID, n.getLine());
+
+    ClassTypeNode ct = (ClassTypeNode) t;
+
+    // 2. Check argument count
+    if (ct.allFields.size() != n.arglist.size())
+      throw new TypeException("Wrong number of parameters in the instantiation of " + n.ID, n.getLine());
+
+    // 3. Check argument types against the class fields
+    for (int i = 0; i < n.arglist.size(); i++) {
+      if (!isSubtype(visit(n.arglist.get(i)), ct.allFields.get(i)))
+        throw new TypeException("Wrong type for " + (i + 1) + "-th parameter in the instantiation of " + n.ID, n.getLine());
+    }
+
+    return new RefTypeNode(n.ID);
   }
 
   @Override
