@@ -290,6 +290,23 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode, TypeExceptio
     return null;
   }
 
+  public TypeNode visitNode(ClassNode n) throws TypeException {
+    if (print) printNode(n, n.ID);
+
+    // 1. Check if the class extends another class
+    if (n.superID != null) {
+      // 2. Add the relation to the superType map
+      TypeRels.superType.put(n.ID, n.superID);
+    }
+
+    // 3. Type check all methods
+    for (MethodNode method : n.methods) {
+      visit(method);
+    }
+
+    return null;
+  }
+
   @Override
   public TypeNode visitNode(ClassTypeNode n) {
     if (print) printNode(n);
