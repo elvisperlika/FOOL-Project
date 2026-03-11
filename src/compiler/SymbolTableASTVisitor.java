@@ -49,6 +49,10 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void, VoidException> {
     if (print) printNode(n);
     Map<String, STentry> hm = new HashMap<>();
     symTable.add(hm);
+
+    // 1. visit all classes
+    for (ClassNode classNode : n.classlist) visit(classNode);
+
     for (Node dec : n.declist) visit(dec);
     visit(n.exp);
     symTable.remove(0);

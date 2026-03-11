@@ -34,6 +34,17 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode, TypeExceptio
   @Override
   public TypeNode visitNode(ProgLetInNode n) throws TypeException {
     if (print) printNode(n);
+
+    // visit all class declarations
+    for (ClassNode classDec : n.classlist) {
+      try {
+        visit(classDec);
+      } catch (IncomplException e) {
+      } catch (TypeException e) {
+        System.out.println("Type checking error in a class declaration: " + e.text);
+      }
+    }
+
     for (Node dec : n.declist)
       try {
         visit(dec);
