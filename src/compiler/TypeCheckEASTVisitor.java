@@ -308,6 +308,30 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode, TypeExceptio
   }
 
   @Override
+  public TypeNode visitNode(ClassCallNode n) throws TypeException {
+    if (print) printNode(n, n.objectID + "." + n.methodID);
+
+    // 1. Check that the method entry is a ArrowTypeNode
+    TypeNode t = visit(n.methodEntry);
+    if (!(t instanceof ArrowTypeNode))
+      throw new TypeException("Invocation of a non-function " + n.methodID, n.getLine());
+
+    ArrowTypeNode at = (ArrowTypeNode) t;
+
+    // 2. Check argument count
+    if (!(at.parlist.size() == n.arglist.size()))
+      throw new TypeException(
+        "Wrong number of parameters in the invocation of " + n.methodID, n.getLine());
+
+    // 3. Check argument types
+    for (int i = 0; i < n.arglist.size(); i++) {
+      if (!isSubtype(visit(n.arglist.get(i)), at.parlist.get(i)))
+        throw new TypeException("Wrong type for " + (i + 1) + "-th parameter in the invocation of " + n.methodID, n.getLine());
+    }
+    return at.ret; // return the method's return type as in CallNode
+  }
+
+  @Override
   public TypeNode visitNode(MethodNode n) throws TypeException {
     if (print) printNode(n, n.id);
 
