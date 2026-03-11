@@ -3,12 +3,17 @@ package compiler;
 import compiler.AST.*;
 import compiler.exc.VoidException;
 import compiler.lib.BaseASTVisitor;
+import compiler.lib.DecNode;
 import compiler.lib.Node;
 import svm.ExecuteVisualVM;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static compiler.lib.FOOLlib.*;
 
 public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidException> {
+  private List<List<String>> dispatchTables = new ArrayList<>();
 
   CodeGenerationASTVisitor() {
   }
@@ -38,29 +43,7 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
   @Override
   public String visitNode(FunNode n) {
     if (print) printNode(n, n.id);
-    String declCode = null, popDecl = null, popParl = null;
-    for (Node dec : n.declist) {
-      declCode = nlJoin(declCode, visit(dec));
-      popDecl = nlJoin(popDecl, "pop");
-    }
-    for (int i = 0; i < n.parlist.size(); i++)
-      popParl = nlJoin(popParl, "pop");
-    String funl = freshFunLabel();
-    putCode(nlJoin(
-        funl + ":", "cfp", // set $fp to $sp value
-        "lra", // load $ra value
-        declCode, // generate code for local declarations (they use the new $fp!!!)
-        visit(n.exp), // generate code for function body expression
-        "stm", // set $tm to popped value (function result)
-        popDecl, // remove local declarations from stack
-        "sra", // set $ra to popped value
-        "pop", // remove Access Link from stack
-        popParl, // remove parameters from stack
-        "sfp", // set $fp to popped value (Control Link)
-        "ltm", // load $tm value (function result)
-        "lra", // load $ra value
-        "js"  // jump to to popped address
-    ));
+    var funl = this.generateFunctionCode(n.declist, n.parlist, n.exp);
     return "push " + funl;
   }
 
@@ -334,6 +317,7 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
   /**
    * Generates code to increment the heap pointer by 1.
    * This is used to allocate space for a new object in the heap.
+   *
    * @return the code to increment the heap pointer
    */
   private String increaseHeapPointer() {
@@ -343,5 +327,88 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
         "add",      // increment heap pointer by 1
         "shp"       // store the incremented heap pointer
     );
+  }
+
+  @Override
+  public String visitNode(MethodNode n) {
+    n.label = this.generateFunctionCode(n.declist, n.parlist, n.exp);
+    return "";
+  }
+
+  /**
+   * Generates the code for a function or method.
+   *
+   * @param declist The list of local declarations within function's scope.
+   * @param parlist The list of parameters.
+   * @param exp     The body expression.
+   * @return The unique label to jump for executing this function.
+   */
+  private String generateFunctionCode(List<DecNode> declist, List<ParNode> parlist, Node exp) {
+    String label = freshFunLabel();
+    String declCode = null, popDecl = null, popParl = null;
+
+    for (Node dec : declist) {
+      declCode = nlJoin(declCode, visit(dec));
+      popDecl = nlJoin(popDecl, "pop");
+    }
+
+    for (int i = 0; i < parlist.size(); i++)
+      popParl = nlJoin(popParl, "pop");
+
+    putCode(nlJoin(
+        label + ":",
+        "cfp",         // Set Frame Pointer (FP) to current Stack Pointer (SP)
+        "lra",         // Push Return Address (RA) onto the stack
+        declCode,      // Allocate and initialize local variables
+        visit(exp),    // Evaluate function/method body
+        "stm",         // Store result in Temporary Monitor (TM) register
+        popDecl,       // Clean up local declarations from the stack
+        "sra",         // Restore RA from stack
+        "pop",         // Remove Access Link (Static Chain)
+        popParl,       // Remove parameters (and 'this' pointer if applicable)
+        "sfp",         // Restore caller's FP (Control Link)
+        "ltm",         // Push result back to stack for the caller
+        "lra",         // Reload RA for the jump
+        "js"           // Jump to RA (return to caller)
+    ));
+    return label;
+  }
+
+  @Override
+  public String visitNode(ClassNode n) {
+    var dispatchTable = this.generateDispatchTable(n);
+    this.dispatchTables.add(dispatchTable); // Copy the row in the global dispatch table to make it available to this class' subclasses
+    var generatedCode = "lhp"; // Load heap pointer on the stack
+    for (var methodLabel : dispatchTable) {
+      generatedCode = nlJoin(
+        generatedCode,
+        "push " + methodLabel,
+        "lhp",
+        "sw", // store method address in the heap
+        this.increaseHeapPointer());
+    }
+    return generatedCode;
+  }
+
+  private ArrayList<String> generateDispatchTable(ClassNode n) {
+    var dispatchTable = new ArrayList<String>();
+    var classOffset = -(this.dispatchTables.size() + 2);
+    if (n.superEntry != null) {
+      var superOffset = n.superEntry.offset;
+      /* The first declared class has offset -2, the second -3 and so on.
+       * Since the first offset is -2, we can get the first index as -(-2)-2
+       */
+      var superDispatchTable = this.dispatchTables.get(-superOffset - 2);
+      dispatchTable.addAll(superDispatchTable);
+    }
+    for (var method : n.methods) {
+      visitNode(method);
+      if (method.offset < dispatchTable.size()) {
+        dispatchTable.set(method.offset, method.label);
+      } else {
+        dispatchTable.add(method.label);
+      }
+    }
+    return dispatchTable;
   }
 }
