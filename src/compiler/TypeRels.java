@@ -4,6 +4,7 @@ import compiler.AST.BoolTypeNode;
 import compiler.AST.IntTypeNode;
 import compiler.AST.RefTypeNode;
 import compiler.AST.EmptyTypeNode;
+import compiler.AST.ArrowTypeNode;
 import compiler.lib.TypeNode;
 
 import java.util.HashMap;
@@ -33,6 +34,11 @@ public class TypeRels {
         return false; // No match found in the inheritance chain
       }
       return true; // Both are the same primitive
+    }
+
+    if (a instanceof ArrowTypeNode) {
+      // TODO: Implement ArrowTypeNode subtyping (cov/contra variance)
+      return true; // Placeholder for now
     }
 
     // 2. Bool is subtype of Int
