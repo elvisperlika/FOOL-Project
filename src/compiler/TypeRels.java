@@ -36,8 +36,17 @@ public class TypeRels {
       return true; // Both are the same primitive
     }
 
-    if (a instanceof ArrowTypeNode) {
-      // TODO: Implement ArrowTypeNode subtyping (cov/contra variance)
+    if (a instanceof ArrowTypeNode aArrow && b instanceof ArrowTypeNode bArrow) {
+      // 1. Covariant return type. a.ret <= b.ret
+      if (!isSubtype(aArrow.ret, bArrow.ret)) return false;
+
+      // 2. Controvariant parameter types. For each parameter, b.param[i] <= a.param[i]
+      if (aArrow.parlist.size() != bArrow.parlist.size()) return false; // Different number of parameters
+      for (int i = 0; i < aArrow.parlist.size(); i++){
+        // a and b are swapped here for contravariance
+        if (!isSubtype(bArrow.parlist.get(i), aArrow.parlist.get(i))) return false;
+      }
+
       return true; // Placeholder for now
     }
 
