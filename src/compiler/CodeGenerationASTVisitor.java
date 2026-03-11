@@ -3,6 +3,7 @@ package compiler;
 import compiler.AST.*;
 import compiler.exc.VoidException;
 import compiler.lib.BaseASTVisitor;
+import compiler.lib.DecNode;
 import compiler.lib.Node;
 import svm.ExecuteVisualVM;
 
@@ -42,29 +43,7 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
   @Override
   public String visitNode(FunNode n) {
     if (print) printNode(n, n.id);
-    String declCode = null, popDecl = null, popParl = null;
-    for (Node dec : n.declist) {
-      declCode = nlJoin(declCode, visit(dec));
-      popDecl = nlJoin(popDecl, "pop");
-    }
-    for (int i = 0; i < n.parlist.size(); i++)
-      popParl = nlJoin(popParl, "pop");
-    String funl = freshFunLabel();
-    putCode(nlJoin(
-        funl + ":", "cfp", // set $fp to $sp value
-        "lra", // load $ra value
-        declCode, // generate code for local declarations (they use the new $fp!!!)
-        visit(n.exp), // generate code for function body expression
-        "stm", // set $tm to popped value (function result)
-        popDecl, // remove local declarations from stack
-        "sra", // set $ra to popped value
-        "pop", // remove Access Link from stack
-        popParl, // remove parameters from stack
-        "sfp", // set $fp to popped value (Control Link)
-        "ltm", // load $tm value (function result)
-        "lra", // load $ra value
-        "js"  // jump to to popped address
-    ));
+    var funl = this.generateFunctionCode(n.declist, n.parlist, n.exp);
     return "push " + funl;
   }
 
@@ -342,6 +321,51 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
         "add",      // increment heap pointer by 1
         "shp"       // store the incremented heap pointer
     );
+  }
+
+  @Override
+  public String visitNode(MethodNode n) {
+    n.label = this.generateFunctionCode(n.declist, n.parlist, n.exp);
+    return "";
+  }
+
+  /**
+   * Generates the code for a function or method.
+   *
+   * @param declist The list of local declarations within function's scope.
+   * @param parlist The list of parameters.
+   * @param exp     The body expression.
+   * @return The unique label to jump for executing this function.
+   */
+  private String generateFunctionCode(List<DecNode> declist, List<ParNode> parlist, Node exp) {
+    String label = freshFunLabel();
+    String declCode = null, popDecl = null, popParl = null;
+
+    for (Node dec : declist) {
+      declCode = nlJoin(declCode, visit(dec));
+      popDecl = nlJoin(popDecl, "pop");
+    }
+
+    for (int i = 0; i < parlist.size(); i++)
+      popParl = nlJoin(popParl, "pop");
+
+    putCode(nlJoin(
+        label + ":",
+        "cfp",         // Set Frame Pointer (FP) to current Stack Pointer (SP)
+        "lra",         // Push Return Address (RA) onto the stack
+        declCode,      // Allocate and initialize local variables
+        visit(exp),    // Evaluate function/method body
+        "stm",         // Store result in Temporary Monitor (TM) register
+        popDecl,       // Clean up local declarations from the stack
+        "sra",         // Restore RA from stack
+        "pop",         // Remove Access Link (Static Chain)
+        popParl,       // Remove parameters (and 'this' pointer if applicable)
+        "sfp",         // Restore caller's FP (Control Link)
+        "ltm",         // Push result back to stack for the caller
+        "lra",         // Reload RA for the jump
+        "js"           // Jump to RA (return to caller)
+    ));
+    return label;
   }
 
   @Override
