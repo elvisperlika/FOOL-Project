@@ -34,6 +34,17 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode, TypeExceptio
   @Override
   public TypeNode visitNode(ProgLetInNode n) throws TypeException {
     if (print) printNode(n);
+
+    // visit all class declarations
+    for (ClassNode classDec : n.classlist) {
+      try {
+        visit(classDec);
+      } catch (IncomplException e) {
+      } catch (TypeException e) {
+        System.out.println("Type checking error in a class declaration: " + e.text);
+      }
+    }
+
     for (Node dec : n.declist)
       try {
         visit(dec);
@@ -288,6 +299,105 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode, TypeExceptio
   public TypeNode visitNode(RefTypeNode n) {
     if (print) printNode(n);
     return null;
+  }
+
+  public TypeNode visitNode(ClassNode n) throws TypeException {
+    if (print) printNode(n, n.ID);
+
+    // 1. Check if the class extends another class
+    if (n.superID != null) {
+      // 2. Add the relation to the superType map
+      TypeRels.superType.put(n.ID, n.superID);
+    }
+
+    // 3. Type check all methods
+    for (MethodNode method : n.methods) {
+      visit(method);
+
+      // 3. Override check
+      if (n.superID != null) {
+        // Get the parent class type
+        ClassTypeNode parentType = (ClassTypeNode) n.superEntry.type;
+
+        // Check if method is an override
+        if (method.offset < parentType.allMethods.size()){
+          TypeNode parentMethodType = parentType.allMethods.get(method.offset);
+
+          if (!isSubtype(method.getType(), parentMethodType))
+            throw new TypeException("Wrong override of method " + method.id + " in class " + n.ID, method.getLine());
+        }
+      }
+    }
+    return null;
+  }
+
+  @Override
+  public TypeNode visitNode(ClassCallNode n) throws TypeException {
+    if (print) printNode(n, n.objectID + "." + n.methodID);
+
+    // 1. Check that the method entry is a ArrowTypeNode
+    TypeNode t = visit(n.methodEntry);
+    if (!(t instanceof ArrowTypeNode))
+      throw new TypeException("Invocation of a non-function " + n.methodID, n.getLine());
+
+    ArrowTypeNode at = (ArrowTypeNode) t;
+
+    // 2. Check argument count
+    if (at.parlist.size() != n.arglist.size())
+      throw new TypeException(
+          "Wrong number of parameters in the invocation of " + n.methodID, n.getLine());
+
+    // 3. Check argument types
+    for (int i = 0; i < n.arglist.size(); i++) {
+      if (!isSubtype(visit(n.arglist.get(i)), at.parlist.get(i)))
+        throw new TypeException("Wrong type for " + (i + 1) + "-th parameter in the invocation of " + n.methodID, n.getLine());
+    }
+    return at.ret; // return the method's return type as in CallNode
+  }
+
+  @Override
+  public TypeNode visitNode(MethodNode n) throws TypeException {
+    if (print) printNode(n, n.id);
+
+    // 1. Visit local declarations
+    for (Node dec : n.declist) {
+      try {
+        visit(dec);
+      } catch (IncomplException e) {
+      } catch (TypeException e) {
+        System.out.println("Type checking error in a declaration: " + e.text);
+      }
+    }
+
+    // 2. Check that return type is subtype of declared return type
+    if (!isSubtype(visit(n.exp), ckvisit(n.retType)))
+      throw new TypeException("Wrong return type for method " + n.id, n.getLine());
+
+    return null;
+  }
+
+  @Override
+  public TypeNode visitNode(NewNode n) throws TypeException {
+    if (print) printNode(n, n.ID);
+
+    // 1. Get the ClassTypeNode from the entry
+    TypeNode t = visit(n.entry);
+    if (!(t instanceof ClassTypeNode))
+      throw new TypeException("Instantiation of a non-class " + n.ID, n.getLine());
+
+    ClassTypeNode ct = (ClassTypeNode) t;
+
+    // 2. Check argument count
+    if (ct.allFields.size() != n.arglist.size())
+      throw new TypeException("Wrong number of parameters in the instantiation of " + n.ID, n.getLine());
+
+    // 3. Check argument types against the class fields
+    for (int i = 0; i < n.arglist.size(); i++) {
+      if (!isSubtype(visit(n.arglist.get(i)), ct.allFields.get(i)))
+        throw new TypeException("Wrong type for " + (i + 1) + "-th parameter in the instantiation of " + n.ID, n.getLine());
+    }
+
+    return new RefTypeNode(n.ID);
   }
 
   @Override
