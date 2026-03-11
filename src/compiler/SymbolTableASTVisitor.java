@@ -462,7 +462,7 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void, VoidException> {
     for (ParNode par : n.parlist) parTypes.add(par.getType());
     TypeNode methodType = new ArrowTypeNode(parTypes, n.retType);
 
-    // TODO: per type checking può servire un n.setType?
+    n.setType(methodType);
 
     // 3. Insert method in Virtual Table and handle Overriding
     STentry oldEntry = hm.get(n.id);

@@ -564,6 +564,10 @@ public class AST {
     public <S, E extends Exception> S accept(BaseASTVisitor<S, E> visitor) throws E {
       return visitor.visitNode(this);
     }
+
+    public void setType(TypeNode methodType) {
+      type = methodType;
+    }
   }
 
   public static class FieldNode extends DecNode {

@@ -302,8 +302,21 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode, TypeExceptio
     // 3. Type check all methods
     for (MethodNode method : n.methods) {
       visit(method);
-    }
 
+      // 3. Override check
+      if (n.superID != null) {
+        // Get the parent class type
+        ClassTypeNode parentType = (ClassTypeNode) n.superEntry.type;
+
+        // Check if method is an override
+        if (method.offset < parentType.allMethods.size()){
+          TypeNode parentMethodType = parentType.allMethods.get(method.offset);
+
+          if (!isSubtype(method.getType(), parentMethodType))
+            throw new TypeException("Wrong override of method " + method.id + " in class " + n.ID, method.getLine());
+        }
+      }
+    }
     return null;
   }
 
