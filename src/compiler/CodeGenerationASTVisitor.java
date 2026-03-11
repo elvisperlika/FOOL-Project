@@ -348,15 +348,15 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
   public String visitNode(ClassNode n) {
     var dispatchTable = this.generateDispatchTable(n);
     this.dispatchTables.add(dispatchTable); // Copy the row in the global dispatch table to make it available to this class' subclasses
-    var generatedCode = new StringBuilder();
-    generatedCode.append("lhp"); // Load heap pointer on the stack
-    dispatchTable.forEach(label -> generatedCode.append(nlJoin(
+    var generatedCode = "lhp"; // Load heap pointer on the stack
+    dispatchTable.forEach(label -> nlJoin(
+        generatedCode,
         "push " + label,
         "lhp",
         "sw", // store method address in the heap
         this.increaseHeapPointer()
-    )));
-    return generatedCode.toString();
+    ));
+    return generatedCode;
   }
 
   private ArrayList<String> generateDispatchTable(ClassNode n) {
