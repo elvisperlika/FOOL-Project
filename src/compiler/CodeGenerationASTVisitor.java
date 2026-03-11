@@ -352,7 +352,7 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
     for (var methodLabel : dispatchTable) {
       generatedCode = nlJoin(
         generatedCode,
-        "push " + label,
+        "push " + methodLabel,
         "lhp",
         "sw", // store method address in the heap
         this.increaseHeapPointer());
