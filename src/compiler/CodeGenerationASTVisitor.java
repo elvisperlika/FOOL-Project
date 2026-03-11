@@ -325,6 +325,12 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
     );
   }
 
+  @Override
+  public String visitNode(ClassCallNode n) {
+    if (print) printNode(n);
+    return "";
+  }
+
   /**
    * Generates code to increment the heap pointer by 1.
    * This is used to allocate space for a new object in the heap.
