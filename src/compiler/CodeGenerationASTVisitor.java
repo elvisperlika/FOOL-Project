@@ -26,6 +26,8 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
   public String visitNode(ProgLetInNode n) {
     if (print) printNode(n);
     String declCode = null;
+    for (Node c : n.classlist)
+      declCode = nlJoin(declCode, visit(c));
     for (Node dec : n.declist)
       declCode = nlJoin(declCode, visit(dec));
     return nlJoin(
@@ -120,23 +122,61 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
   @Override
   public String visitNode(CallNode n) {
     if (print) printNode(n, n.id);
+
     String argCode = null, getAR = null;
-    for (int i = n.arglist.size() - 1; i >= 0; i--)
+
+    // Evaluate arguments in reverse order
+    for (int i = n.arglist.size() - 1; i >= 0; i--) {
       argCode = nlJoin(argCode, visit(n.arglist.get(i)));
-    for (int i = 0; i < n.nl - n.entry.nl; i++)
+    }
+
+    // Follow the static chain (Access Links) to find the declaration environment
+    for (int i = 0; i < n.nl - n.entry.nl; i++) {
       getAR = nlJoin(getAR, "lw");
-    return nlJoin(
-        "lfp", // load Control Link (pointer to frame of function "id" caller)
-        argCode, // generate code for argument expressions in reversed order
-        "lfp", getAR, // retrieve address of frame containing "id" declaration
-        // by following the static chain (of Access Links)
-        "stm", // set $tm to popped value (with the aim of duplicating top of stack)
-        "ltm", // load Access Link (pointer to frame of function "id" declaration)
-        "ltm", // duplicate top of stack
-        "push " + n.entry.offset, "add", // compute address of "id" declaration
-        "lw", // load address of "id" function
-        "js"  // jump to popped address (saving address of subsequent instruction in $ra)
-    );
+    }
+
+    if (n.entry.offset >= 0) {
+      // Method call (offset >= 0)
+      return nlJoin(
+        "lfp", // Load Control Link
+        argCode, // Generate and push argument values
+
+        // Get the Object Pointer
+        "lfp", getAR,
+
+        "stm", // Store the Object Pointer in the TM register
+        "ltm",
+        "ltm", // Duplicate the OP on the stack to use it for Dispatch Table lookup
+
+        "lw", // Load the Dispatch Pointer (which is located at OP offset 0)
+        "push " + n.entry.offset, // Push the method's offset inside the Dispatch Table
+        "add", // Add offset to Dispatch Pointer to get the exact method entry address
+        "lw", // Load the actual method address from the calculated memory location
+
+        "js" // Jump to method (saving return address in $ra)
+      );
+
+    } else {
+      // Function call (offset < 0)
+      return nlJoin(
+        "lfp", // Load Control Link
+        argCode, // Generate and push argument values
+
+        // Retrieve the Address of the function declaration
+        "lfp", getAR,
+
+        "stm", // Store the pointer temporarily in the TM register
+        "ltm", // Push it as the Access Link for the function's Activation Record
+        "ltm", // Duplicate it to locate the function address
+
+        // Compute the function's address on the stack
+        "push " + n.entry.offset,
+        "add", // Add offset to the frame address
+        "lw", // Load the function address
+
+        "js" // Jump to function (saving return address in $ra)
+      );
+    }
   }
 
   @Override
@@ -318,25 +358,25 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
       getAR = nlJoin(getAR, "lw");
 
     return nlJoin(
-        "lfp",  // load Control Link (pointer to frame of function "id" caller)
-        argCode,  // generate code for argument expressions in reversed order
+      "lfp",  // load Control Link (pointer to frame of function "id" caller)
+      argCode,  // generate code for argument expressions in reversed order
 
-        // Get Object Pointer
-        "lfp", getAR,   // retrieve address of frame containing "id" declaration
-                        // by following the static chain (of Access Links)
-        "push " + n.entry.offset, "add", // compute address of "id" declaration
-        "lw",  // load address of "id" class dispatch pointer
+      // Get Object Pointer
+      "lfp", getAR,   // retrieve address of frame containing "id" declaration
+      // by following the static chain (of Access Links)
+      "push " + n.entry.offset, "add", // compute address of "id" declaration
+      "lw",  // load address of "id" class dispatch pointer
 
-        // Get method address from dispatch table
-        "stm",  // Save temporary the OP in the TM register
-        "ltm",  // Push the TM value on the stack
-        "ltm",  // Duplicate the OP on the stack
+      // Get method address from dispatch table
+      "stm",  // Save temporary the OP in the TM register
+      "ltm",  // Push the TM value on the stack
+      "ltm",  // Duplicate the OP on the stack
 
-        "lw", // Load OP value, offset 0 -> Class dispatch pointer
-        "push " + n.methodEntry.offset, "add", // Compute address of method in dispatch table
-        "lw", // Load method address from dispatch table
+      "lw", // Load OP value, offset 0 -> Class dispatch pointer
+      "push " + n.methodEntry.offset, "add", // Compute address of method in dispatch table
+      "lw", // Load method address from dispatch table
 
-        "js" // jump to method address (saving address of subsequent instruction in $ra)
+      "js" // jump to method address (saving address of subsequent instruction in $ra)
     );
   }
 
@@ -407,11 +447,11 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
     var generatedCode = "lhp"; // Load heap pointer on the stack
     for (var methodLabel : dispatchTable) {
       generatedCode = nlJoin(
-        generatedCode,
-        "push " + methodLabel,
-        "lhp",
-        "sw", // store method address in the heap
-        this.increaseHeapPointer());
+          generatedCode,
+          "push " + methodLabel,
+          "lhp",
+          "sw", // store method address in the heap
+          this.increaseHeapPointer());
     }
     return generatedCode;
   }
