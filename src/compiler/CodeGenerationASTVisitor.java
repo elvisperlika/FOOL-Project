@@ -26,6 +26,8 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
   public String visitNode(ProgLetInNode n) {
     if (print) printNode(n);
     String declCode = null;
+    for (Node c : n.classlist)
+      declCode = nlJoin(declCode, visit(c));
     for (Node dec : n.declist)
       declCode = nlJoin(declCode, visit(dec));
     return nlJoin(
@@ -356,25 +358,25 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
       getAR = nlJoin(getAR, "lw");
 
     return nlJoin(
-        "lfp",  // load Control Link (pointer to frame of function "id" caller)
-        argCode,  // generate code for argument expressions in reversed order
+      "lfp",  // load Control Link (pointer to frame of function "id" caller)
+      argCode,  // generate code for argument expressions in reversed order
 
-        // Get Object Pointer
-        "lfp", getAR,   // retrieve address of frame containing "id" declaration
-        // by following the static chain (of Access Links)
-        "push " + n.entry.offset, "add", // compute address of "id" declaration
-        "lw",  // load address of "id" class dispatch pointer
+      // Get Object Pointer
+      "lfp", getAR,   // retrieve address of frame containing "id" declaration
+      // by following the static chain (of Access Links)
+      "push " + n.entry.offset, "add", // compute address of "id" declaration
+      "lw",  // load address of "id" class dispatch pointer
 
-        // Get method address from dispatch table
-        "stm",  // Save temporary the OP in the TM register
-        "ltm",  // Push the TM value on the stack
-        "ltm",  // Duplicate the OP on the stack
+      // Get method address from dispatch table
+      "stm",  // Save temporary the OP in the TM register
+      "ltm",  // Push the TM value on the stack
+      "ltm",  // Duplicate the OP on the stack
 
-        "lw", // Load OP value, offset 0 -> Class dispatch pointer
-        "push " + n.methodEntry.offset, "add", // Compute address of method in dispatch table
-        "lw", // Load method address from dispatch table
+      "lw", // Load OP value, offset 0 -> Class dispatch pointer
+      "push " + n.methodEntry.offset, "add", // Compute address of method in dispatch table
+      "lw", // Load method address from dispatch table
 
-        "js" // jump to method address (saving address of subsequent instruction in $ra)
+      "js" // jump to method address (saving address of subsequent instruction in $ra)
     );
   }
 
