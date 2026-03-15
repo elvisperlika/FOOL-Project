@@ -136,43 +136,43 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
     if (n.entry.offset >= 0) {
       // Method call (offset >= 0)
       return nlJoin(
-          "lfp", // Load Control Link
-          argCode, // Generate and push argument values
+        "lfp", // Load Control Link
+        argCode, // Generate and push argument values
 
-          // Get the Object Pointer
-          "lfp", getAR,
+        // Get the Object Pointer
+        "lfp", getAR,
 
-          "stm", // Store the Object Pointer in the TM register
-          "ltm",
-          "ltm", // Duplicate the OP on the stack to use it for Dispatch Table lookup
+        "stm", // Store the Object Pointer in the TM register
+        "ltm",
+        "ltm", // Duplicate the OP on the stack to use it for Dispatch Table lookup
 
-          "lw", // Load the Dispatch Pointer (which is located at OP offset 0)
-          "push " + n.entry.offset, // Push the method's offset inside the Dispatch Table
-          "add", // Add offset to Dispatch Pointer to get the exact method entry address
-          "lw", // Load the actual method address from the calculated memory location
+        "lw", // Load the Dispatch Pointer (which is located at OP offset 0)
+        "push " + n.entry.offset, // Push the method's offset inside the Dispatch Table
+        "add", // Add offset to Dispatch Pointer to get the exact method entry address
+        "lw", // Load the actual method address from the calculated memory location
 
-          "js" // Jump to method (saving return address in $ra)
+        "js" // Jump to method (saving return address in $ra)
       );
 
     } else {
       // Function call (offset < 0)
       return nlJoin(
-          "lfp", // Load Control Link
-          argCode, // Generate and push argument values
+        "lfp", // Load Control Link
+        argCode, // Generate and push argument values
 
-          // Retrieve the Address of the function declaration
-          "lfp", getAR,
+        // Retrieve the Address of the function declaration
+        "lfp", getAR,
 
-          "stm", // Store the pointer temporarily in the TM register
-          "ltm", // Push it as the Access Link for the function's Activation Record
-          "ltm", // Duplicate it to locate the function address
+        "stm", // Store the pointer temporarily in the TM register
+        "ltm", // Push it as the Access Link for the function's Activation Record
+        "ltm", // Duplicate it to locate the function address
 
-          // Compute the function's address on the stack
-          "push " + n.entry.offset,
-          "add", // Add offset to the frame address
-          "lw", // Load the function address
+        // Compute the function's address on the stack
+        "push " + n.entry.offset,
+        "add", // Add offset to the frame address
+        "lw", // Load the function address
 
-          "js" // Jump to function (saving return address in $ra)
+        "js" // Jump to function (saving return address in $ra)
       );
     }
   }
