@@ -8,6 +8,7 @@ import compiler.lib.Node;
 import compiler.lib.TypeNode;
 
 import static compiler.TypeRels.isSubtype;
+import static compiler.TypeRels.lowestCommonAncestor;
 
 //visitNode(n) fa il type checking di un Node n e ritorna:
 //- per una espressione, il suo tipo (oggetto BoolTypeNode o IntTypeNode)
@@ -99,6 +100,8 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode, TypeExceptio
     TypeNode e = visit(n.el);
     if (isSubtype(t, e)) return e;
     if (isSubtype(e, t)) return t;
+    TypeNode lca = TypeRels.lowestCommonAncestor(t, e);
+    if (lca != null) return lca;
     throw new TypeException("Incompatible types in then-else branches", n.getLine());
   }
 

@@ -58,4 +58,18 @@ public class TypeRels {
 
     return false; // No match
   }
+
+  public static TypeNode lowestCommonAncestor(TypeNode a, TypeNode b) {
+    if(a instanceof EmptyTypeNode) return b; // Null is subtype of any RefTypeNode, so the LCA is b
+    if(b instanceof EmptyTypeNode) return a; // Null is subtype of any RefTypeNode, so the LCA is a
+
+    if (isSubtype(b, a)) return new RefTypeNode(((RefTypeNode) a).className); // If b is subtype of a, then a is the LCA
+    if (isSubtype(a, b)) return new RefTypeNode(((RefTypeNode) b).className); // If a is subtype of b, then b is the LCA
+
+    if (a instanceof IntTypeNode || b instanceof IntTypeNode) return new IntTypeNode();
+    if (b instanceof BoolTypeNode || a instanceof BoolTypeNode) return new BoolTypeNode();
+
+    // Typechecking failed
+    return null;
+  }
 }
