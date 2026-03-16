@@ -60,14 +60,34 @@ public class TypeRels {
   }
 
   public static TypeNode lowestCommonAncestor(TypeNode a, TypeNode b) {
-    if(a instanceof EmptyTypeNode) return b; // Null is subtype of any RefTypeNode, so the LCA is b
-    if(b instanceof EmptyTypeNode) return a; // Null is subtype of any RefTypeNode, so the LCA is a
+    if(a instanceof EmptyTypeNode)
+      return b; // Null is subtype of any RefTypeNode, so the LCA is b
+    else if(b instanceof EmptyTypeNode)
+      return a; // Null is subtype of any RefTypeNode, so the LCA is a
 
-    if (isSubtype(b, a)) return new RefTypeNode(((RefTypeNode) a).className); // If b is subtype of a, then a is the LCA
-    if (isSubtype(a, b)) return new RefTypeNode(((RefTypeNode) b).className); // If a is subtype of b, then b is the LCA
+    if (a instanceof RefTypeNode aRef && b instanceof RefTypeNode bRef) {
+      // Climb the inheritance chain of a
+      String aName = aRef.className;
 
-    if (a instanceof IntTypeNode || b instanceof IntTypeNode) return new IntTypeNode();
-    if (b instanceof BoolTypeNode || a instanceof BoolTypeNode) return new BoolTypeNode();
+      while (aName != null) {
+        RefTypeNode currentClass = new RefTypeNode(aName);
+
+        // Check if 'b' is a subtype of the current class
+        if (isSubtype(b, currentClass)) {
+          return currentClass; // Found the lowest common ancestor
+        }
+        aName = superType.get(aName);
+      }
+
+      return null; // No common ancestor found
+    }
+
+    if (isSubtype(a, new IntTypeNode()) && isSubtype(b, new IntTypeNode())) {
+      if (a instanceof IntTypeNode || b instanceof IntTypeNode) {
+        return new IntTypeNode(); // LCA of Int and Bool is Int
+      }
+      return new BoolTypeNode(); // LCA of Bool and Bool is Bool
+    }
 
     // Typechecking failed
     return null;
