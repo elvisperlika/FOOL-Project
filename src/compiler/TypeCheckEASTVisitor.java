@@ -310,19 +310,37 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode, TypeExceptio
       TypeRels.superType.put(n.ID, n.superID);
     }
 
-    // 3. Type check all methods
+    ClassTypeNode parentType = n.superID != null ? (ClassTypeNode) n.superEntry.type : null;
+
+    // 3. Check field overrides
+    for (FieldNode field : n.fields) {
+      if (parentType != null) {
+        // calculate the offset of the field
+        int offset = -field.offset - 1;
+
+        // if position is less then length of parent fields, then it's an override
+        if (offset < parentType.allFields.size()) {
+          TypeNode parentFieldType = parentType.allFields.get(offset);
+          // check that the field type is subtype of the parent field type
+          if (!isSubtype(field.getType(), parentFieldType))
+            throw new TypeException("Wrong override of field " + field.id + " in class " + n.ID, field.getLine());
+        }
+      }
+    }
+
+    // 4. Type check all methods
     for (MethodNode method : n.methods) {
       visit(method);
 
-      // 3. Override check
-      if (n.superID != null) {
-        // Get the parent class type
-        ClassTypeNode parentType = (ClassTypeNode) n.superEntry.type;
+      // Override check
+      if (parentType != null) {
+        // calculate the offset of the method
+        int offset = method.offset;
 
-        // Check if method is an override
-        if (method.offset < parentType.allMethods.size()){
-          TypeNode parentMethodType = parentType.allMethods.get(method.offset);
-
+        // if position is less then length of parent methods, then it's an override
+        if (offset < parentType.allMethods.size()) {
+          TypeNode parentMethodType = parentType.allMethods.get(offset);
+          // check that the method type is subtype of the parent method type
           if (!isSubtype(method.getType(), parentMethodType))
             throw new TypeException("Wrong override of method " + method.id + " in class " + n.ID, method.getLine());
         }
