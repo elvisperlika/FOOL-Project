@@ -1,0 +1,19 @@
+let
+  class A (x: int) {
+    fun getX: int () x;
+  }
+
+  class B extends A (y: int) {
+    fun doSomethingB: bool () true;
+  }
+
+  class C extends A (z: bool) {
+    fun doSomethingC: bool () false;
+  }
+
+  var testClassi: A = if true then { new B(10, 20) } else { new C(30, false) };
+
+  var testTipiBase: int = if false then { 42 } else { true };
+
+in
+  print( testClassi.getX() + testTipiBase );
