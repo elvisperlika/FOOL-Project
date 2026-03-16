@@ -327,10 +327,10 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void, VoidException> {
     if (n.superID != null) {
       n.superEntry = stLookup(n.superID);
       // Get the ClassTypeNode of the superclass
-      ClassTypeNode classTypeNode = (ClassTypeNode) n.superEntry.type;
+      ClassTypeNode parentCT = (ClassTypeNode) n.superEntry.type;
       // Copy the ClassTypeNode content
-      allFields.addAll(classTypeNode.allFields);
-      allMethods.addAll(classTypeNode.allMethods);
+      allFields.addAll(parentCT.allFields);
+      allMethods.addAll(parentCT.allMethods);
     }
     // Add the fields and methods declared in the current class to the lists of all fields and methods of the current class.
     STentry sTentry = new STentry(globalNestingLevel, new ClassTypeNode(allFields, allMethods), decOffset);
@@ -400,12 +400,20 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void, VoidException> {
       // since field offsets are negative and start from -1
       int index = -fieldEntry.offset - 1;
       if (index < allFields.size()) {
-        allFields.set(index, field.getType());
+        // Overriding
+        if (TypeRels.isSubtype(field.getType(), allFields.get(index))) {
+          System.out.println("Field id " + field.id + " at line " + field.getLine()
+              + " already declared in class " + n.ID + " -> Overriding.");
+          allFields.set(index, field.getType());
+        } else {
+          System.out.println("Field id " + field.id + " at line " + field.getLine()
+              + " cannot override field declared in class " + n.ID);
+        }
       } else {
+        // New field
         allFields.add(field.getType());
       }
     }
-    ;
 
     // For methods, we don't need to convert the offset to access the method type
     // in the list of all methods, since method offsets are positive and start from 0
@@ -431,7 +439,14 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void, VoidException> {
       visit(method);
       if (method.offset < allMethods.size()) {
         // Overriding
-        allMethods.set(method.offset, (ArrowTypeNode) method.getType());
+        if (TypeRels.isSubtype(method.getType(), allMethods.get(method.offset))) {
+          System.out.println("Method id " + method.id + " at line " + method.getLine()
+              + " already declared in class " + n.ID + " -> Overriding.");
+          allMethods.set(method.offset, (ArrowTypeNode) method.getType());
+        } else {
+          System.out.println("Method id " + method.id + " at line " + method.getLine()
+              + " cannot override method declared in class " + n.ID);
+        }
       } else {
         // New method
         allMethods.add((ArrowTypeNode) method.getType());
