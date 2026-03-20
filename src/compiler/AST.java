@@ -14,6 +14,8 @@ public class AST {
   public static class ProgLetInNode extends Node {
     final List<ClassNode> classlist;
     final List<DecNode> declist;
+    // The expression to be evaluated after all the declarations have been processed.
+    // Basically, the body of the program.
     final Node exp;
 
     ProgLetInNode(List<ClassNode> c, List<DecNode> d, Node e) {

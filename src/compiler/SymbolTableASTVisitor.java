@@ -22,6 +22,7 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void, VoidException> {
    */
   private Map<String, Map<String, STentry>> classTable = new HashMap<>();
   private int nestingLevel = 0; // current nesting level
+
   private int decOffset = -2;
 
   SymbolTableASTVisitor() {
@@ -47,6 +48,7 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void, VoidException> {
   @Override
   public Void visitNode(ProgLetInNode n) {
     if (print) printNode(n);
+    // Crete the global scope
     Map<String, STentry> hm = new HashMap<>();
     symTable.add(hm);
 
@@ -55,6 +57,7 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void, VoidException> {
 
     for (Node dec : n.declist) visit(dec);
     visit(n.exp);
+    // Remove the global scope from the symbol table
     symTable.remove(0);
     return null;
   }
@@ -69,6 +72,7 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void, VoidException> {
   @Override
   public Void visitNode(FunNode n) {
     if (print) printNode(n);
+    // Get the current scope from the symbol table
     Map<String, STentry> hm = symTable.get(nestingLevel);
     List<TypeNode> parTypes = new ArrayList<>();
     for (ParNode par : n.parlist) parTypes.add(par.getType());
@@ -362,14 +366,15 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void, VoidException> {
     Set<String> newFields = new HashSet<>();
     for (FieldNode field : n.fields) {
       if (print) printNode(field);
-      STentry oldFieldEntry = virtualTable.get(field.id);
-      STentry fieldEntry;
 
       // Check if the field name is already in the set
       if (!newFields.add(field.id)) {
         System.out.println("Field id " + field.id + " at line " + field.getLine() + " already declared");
         stErrors++;
       }
+
+      STentry oldFieldEntry = virtualTable.get(field.id);
+      STentry fieldEntry;
       // If there is already an entry for the field name in the virtual table,
       // check if it is a method or a field and print the appropriate error message.
       // If it is a method, print an error message indicating that the field cannot override a method.
@@ -405,7 +410,6 @@ public class SymbolTableASTVisitor extends BaseASTVisitor<Void, VoidException> {
         allFields.add(field.getType());
       }
     }
-    ;
 
     // For methods, we don't need to convert the offset to access the method type
     // in the list of all methods, since method offsets are positive and start from 0
