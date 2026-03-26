@@ -5,7 +5,7 @@ import compiler.exc.VoidException;
 import compiler.lib.BaseASTVisitor;
 import compiler.lib.DecNode;
 import compiler.lib.Node;
-import svm.ExecuteVisualVM;
+import svm.ExecuteVM;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,8 +31,11 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
     for (Node dec : n.declist)
       declCode = nlJoin(declCode, visit(dec));
     return nlJoin(
-        "push 0", declCode, // generate code for declarations (allocation)
-        visit(n.exp), "halt", getCode()
+        "push 0",
+        declCode, // generate code for declarations (allocation)
+        visit(n.exp),
+        "halt",
+        getCode()
     );
   }
 
@@ -326,7 +329,7 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
     // Next (2): store class dispatch pointer in the heap
     int classOffset = n.entry.offset; // get class offset in vtable
     String storeDispatchPointerCode = nlJoin(
-        "push " + ExecuteVisualVM.MEMSIZE,
+        "push " + ExecuteVM.MEMSIZE,
         "push " + classOffset,
         "add",        // compute address of class dispatch pointer
         "lw",         // load class dispatch pointer replacing the address on the stack with its value
@@ -458,7 +461,6 @@ public class CodeGenerationASTVisitor extends BaseASTVisitor<String, VoidExcepti
 
   private ArrayList<String> generateDispatchTable(ClassNode n) {
     var dispatchTable = new ArrayList<String>();
-    var classOffset = -(this.dispatchTables.size() + 2);
     if (n.superEntry != null) {
       var superOffset = n.superEntry.offset;
       /* The first declared class has offset -2, the second -3 and so on.

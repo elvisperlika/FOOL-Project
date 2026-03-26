@@ -9,6 +9,7 @@ import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
+import svm.ExecuteVM;
 import svm.ExecuteVisualVM;
 import svm.SVMLexer;
 import svm.SVMParser;
@@ -98,7 +99,7 @@ public class Test {
 
     System.out.println("Running generated code via Stack Virtual Machine.");
 
-    ExecuteVisualVM vm = new ExecuteVisualVM(parserASM.code, parserASM.sourceMap, source);
+    ExecuteVM vm = new ExecuteVM(parserASM.code);
     vm.cpu();
 
   }

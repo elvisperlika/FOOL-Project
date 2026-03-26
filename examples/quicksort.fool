@@ -1,8 +1,8 @@
 let
-  var x: int = 10;
+  var x: int = 9;
   var y: int = 5;
 in
-  if !(x <= y) then {
+  if (x >= y) then {
     print(x)
   }
   else {

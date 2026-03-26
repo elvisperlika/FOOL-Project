@@ -430,7 +430,7 @@ public class TypeCheckEASTVisitor extends BaseEASTVisitor<TypeNode, TypeExceptio
   @Override
   public TypeNode visitNode(FieldNode n) throws TypeException {
     if (print) printNode(n, n.id);
-    return null; // TODO: check when implementing newnode typechecking
+    return null;
   }
 
 // STentry (ritorna campo type)

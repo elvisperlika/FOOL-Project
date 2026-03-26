@@ -1,22 +1,15 @@
 push 0
-push 10
+push 9
 push 5
-lfp
-push -2
-add
-lw
 lfp
 push -3
 add
 lw
-bleq label4
-push 0
-b label5
-label4:
-push 1
-label5:
-push 0
-beq label2
+lfp
+push -2
+add
+lw
+bleq label2
 push 0
 b label3
 label2:
